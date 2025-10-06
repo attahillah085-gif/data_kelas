@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head><title>Data Kas</title></head>
+<body>
+    <h2>Input Kas</h2>
+    <form method="POST">
+        <input type="text" name="nama" placeholder="Nama"><br>
+        <input type="number" name="jumlah" placeholder="Jumlah (Rp)"><br>
+        <button type="submit">Simpan</button>
+    </form>
+
+    <h2>Riwayat Kas</h2>
+    <table border="1">
+        <tr>
+            <th>Nama</th>
+            <th>Jumlah</th>
+            <th>Tanggal</th>
+        </tr>
+        {% for item in data %}
+        <tr>
+            <td>{{ item[1] }}</td>
+            <td>Rp {{ item[2] }}</td>
+            <td>{{ item[3] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
