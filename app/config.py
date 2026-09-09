@@ -29,11 +29,20 @@ def _database_uri() -> str:
     return f"sqlite:///{instance / 'thriftflow.db'}"
 
 
+def _engine_options(uri: str) -> dict:
+    """Opsi engine yang aman untuk masing-masing database."""
+    if uri.startswith("sqlite"):
+        # timeout menghindari error "database is locked" saat beberapa
+        # request menulis bersamaan (dipasangkan dengan mode WAL di app factory).
+        return {"connect_args": {"timeout": 30}}
+    return {"pool_pre_ping": True}
+
+
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-ubah-di-produksi")
     SQLALCHEMY_DATABASE_URI = _database_uri()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True}
+    SQLALCHEMY_ENGINE_OPTIONS = _engine_options(SQLALCHEMY_DATABASE_URI)
 
     # Identitas bisnis default (bisa diubah di halaman Pengaturan)
     APP_NAME = "The Girl House"

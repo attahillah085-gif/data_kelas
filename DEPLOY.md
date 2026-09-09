@@ -6,9 +6,57 @@ di kedua layanan ini (wajib agar PWA bisa di-install & notifikasi jalan).
 
 > Butuh: akun GitHub (repo ini) + akun di layanan hosting. Ada paket **gratis**.
 
+Pilih salah satu:
+- **Hostinger VPS** — cocok untuk dipakai bisnis, always-on, data permanen (di bawah).
+- **Render** — paling cepat untuk coba/demo gratis.
+
 ---
 
-## ✅ Cara termudah — Render (rekomendasi)
+## 🏆 Hostinger VPS (untuk dipakai bisnis)
+
+> ⚠️ **Beli paket VPS**, mis. **KVM 1/KVM 2** — **BUKAN** hosting biasa/WordPress.
+> Hosting shared hanya untuk PHP dan **tidak bisa** menjalankan aplikasi Python ini.
+
+### Langkah
+1. **Beli VPS** di Hostinger → saat setup pilih OS **Ubuntu 22.04/24.04**. Catat **IP VPS**
+   dan **password root** (atau atur SSH key).
+2. **(Disarankan) Arahkan domain** ke VPS: di pengaturan DNS domain, buat **A record**
+   ke IP VPS (mis. `app.thegirlhouse.id → 123.45.67.89`). Domain diperlukan agar **HTTPS**
+   aktif (wajib untuk PWA & notifikasi). Belum punya domain? Bisa dulu tanpa (akses via IP),
+   HTTPS dipasang belakangan.
+3. **Masuk ke VPS** lewat SSH (atau Browser Terminal di panel Hostinger):
+   ```bash
+   ssh root@IP-VPS-ANDA
+   ```
+4. **Jalankan pemasangan otomatis** (ganti dengan domain kamu; kosongkan bila belum ada domain):
+   ```bash
+   apt update && apt install -y git
+   git clone --branch claude/thrifting-business-management-ew0pt2 \
+     https://github.com/attahillah085-gif/data_kelas.git /var/www/thegirlhouse
+   sudo bash /var/www/thegirlhouse/deploy/setup_vps.sh app.domain-anda.com
+   ```
+   Skrip ini otomatis: pasang Python & Nginx, siapkan aplikasi, buat `SECRET_KEY`,
+   nyalakan service, dan pasang **HTTPS gratis** (Let's Encrypt).
+5. Buka **https://app.domain-anda.com** (atau `http://IP-VPS`) → halaman **Setup** muncul →
+   buat **akun pemilik**. Selesai! 🎉
+
+> **Repo privat?** Saat `git clone`, GitHub akan minta login. Pakai **username + Personal
+> Access Token** GitHub, atau set repo jadi publik (aman — file rahasia `.env` tidak ikut
+> ter-commit). Alternatif: unggah file lewat File Manager Hostinger ke `/var/www/thegirlhouse`.
+
+### Merawat
+- **Update ke versi terbaru:** `sudo bash /var/www/thegirlhouse/deploy/update.sh`
+- **Restart:** `systemctl restart thegirlhouse`
+- **Lihat log:** `journalctl -u thegirlhouse -f`
+- **Backup data:** cukup salin file `/var/www/thegirlhouse/instance/thriftflow.db`
+
+### Catatan data
+Default memakai **SQLite** — datanya tersimpan permanen di file server (aman untuk tim
+kecil). Untuk skala besar, pasang PostgreSQL lalu isi `DATABASE_URL` di `.env` dan restart.
+
+---
+
+## ✅ Cara termudah — Render (untuk coba/demo gratis)
 
 1. Buka **https://render.com** → daftar/login (bisa pakai akun GitHub).
 2. Klik **New +** → **Blueprint**.

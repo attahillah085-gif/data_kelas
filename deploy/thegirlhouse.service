@@ -1,0 +1,18 @@
+# systemd service untuk menjalankan The Girl House dengan Gunicorn.
+# Salin ke: /etc/systemd/system/thegirlhouse.service
+[Unit]
+Description=The Girl House (Gunicorn)
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/thegirlhouse
+EnvironmentFile=/var/www/thegirlhouse/.env
+ExecStart=/var/www/thegirlhouse/.venv/bin/gunicorn "app:create_app()" \
+    --workers 2 --bind 127.0.0.1:8000 --timeout 120
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

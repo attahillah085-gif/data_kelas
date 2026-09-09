@@ -41,6 +41,14 @@ def create_app(config_object: type = Config) -> Flask:
 
     with app.app_context():
         db.create_all()
+        # SQLite: aktifkan WAL agar lebih tahan akses baca/tulis bersamaan
+        if db.engine.url.get_backend_name() == "sqlite":
+            try:
+                from sqlalchemy import text
+                db.session.execute(text("PRAGMA journal_mode=WAL"))
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
 
     _register_context(app)
     _register_pwa(app)
