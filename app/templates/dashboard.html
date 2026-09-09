@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — {{ setting.business_name }}{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Halo {{ current_user.name.split()[0] }}, ini ringkasan bisnismu.{% endblock %}
+
+{% block topbar_actions %}
+  {% if periods %}
+  <form method="get" class="hide-sm">
+    <select name="period" onchange="this.form.submit()" style="min-width:170px">
+      {% for p in periods %}
+      <option value="{{ p.id }}" {{ 'selected' if selected and p.id==selected.id }}>{{ p.name }}{{ ' • ditutup' if not p.is_open }}</option>
+      {% endfor %}
+    </select>
+  </form>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+{% if not periods %}
+  <div class="card card-pad empty">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+    <h4>Belum ada periode keuangan</h4>
+    <p>Mulai dengan membuat periode pertama (mis. bulan berjalan) untuk mencatat transaksi.</p>
+    {% if current_user.can_manage %}<a class="btn btn-primary" href="{{ url_for('finance.index') }}">Buat Periode Pertama</a>{% endif %}
+  </div>
+{% else %}
+
+{% if current_user.is_investor %}
+<div class="card card-pad mb-16" style="background:linear-gradient(120deg,var(--primary-soft),transparent)">
+  <div class="row-between">
+    <div>
+      <div class="text-muted" style="font-size:.82rem;font-weight:600">Estimasi bagi hasil kamu • {{ selected.name if selected }}</div>
+      <div style="font-size:1.8rem;font-weight:800;color:var(--primary-strong)">{{ my_payout|rupiah }}</div>
+      <div class="text-soft" style="font-size:.8rem">Modal kamu {{ my_investment|rupiah }} • kepemilikan {{ my_percent }}%</div>
+    </div>
+    <a class="btn btn-soft" href="{{ url_for('investors.index', period=selected.id if selected) }}">Detail bagi hasil →</a>
+  </div>
+</div>
+{% endif %}
+
+<!-- KPI utama -->
+<div class="grid g-4">
+  <div class="card kpi">
+    <div class="top"><span class="kpi-ico ico-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span><span class="label">Pemasukan</span></div>
+    <div class="value">{{ income|rupiah }}</div>
+    <div class="foot">Periode {{ selected.name if selected else '-' }}</div>
+  </div>
+  <div class="card kpi">
+    <div class="top"><span class="kpi-ico ico-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg></span><span class="label">Pengeluaran</span></div>
+    <div class="value">{{ expense|rupiah }}</div>
+    <div class="foot">Periode {{ selected.name if selected else '-' }}</div>
+  </div>
+  <div class="card kpi">
+    <div class="top"><span class="kpi-ico {{ 'ico-blue' if net>=0 else 'ico-amber' }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span><span class="label">Laba Bersih</span></div>
+    <div class="value {{ 'text-green' if net>0 else 'text-red' if net<0 }}">{{ net|rupiah }}</div>
+    <div class="foot">{{ 'Untung' if net>0 else 'Rugi' if net<0 else 'Impas' }} periode ini</div>
+  </div>
+  <div class="card kpi">
+    <div class="top"><span class="kpi-ico ico-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8"/><path d="M1 3h22v5H1z"/></svg></span><span class="label">Nilai Stok</span></div>
+    <div class="value sm">{{ stock_value|rupiah }}</div>
+    <div class="foot">{{ stock_pieces|angka }} pcs tersisa</div>
+  </div>
+</div>
+
+<!-- KPI sekunder -->
+<div class="grid g-4 mt-16">
+  <div class="card kpi">
+    <div class="top"><span class="kpi-ico ico-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><span class="label">Modal Investor</span></div>
+    <div class="value sm">{{ total_capital|rupiah }}</div>
+    <div class="foot">{{ investor_count }} investor aktif</div>
+  </div>
+  <div class="card kpi">
+    <div class="top"><span class="kpi-ico ico-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span><span class="label">Konten Minggu Ini</span></div>
+    <div class="value">{{ upcoming_week }}</div>
+    <div class="foot">Terjadwal 7 hari ke depan</div>
+  </div>
+  <div class="card kpi" style="grid-column:span 2">
+    <div class="row-between" style="height:100%">
+      <div>
+        <div class="label" style="margin-bottom:6px">Aksi cepat</div>
+        <div class="flex flex-wrap gap-8">
+          {% if current_user.can_manage %}
+          <a class="btn btn-primary btn-sm" href="{{ url_for('finance.index', period=selected.id if selected) }}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> Transaksi</a>
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('inventory.index') }}">+ Stok</a>
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('content.index') }}">+ Konten</a>
+          {% else %}
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('finance.index') }}">Lihat Keuangan</a>
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('investors.index') }}">Bagi Hasil</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Grafik & rincian -->
+<div class="grid cols-main mt-16">
+  <div class="card">
+    <div class="card-head">
+      <h3>Pemasukan vs Pengeluaran</h3>
+      <div class="spacer"></div>
+      <div class="legend"><span><i style="background:var(--primary)"></i>Masuk</span><span><i style="background:var(--danger)"></i>Keluar</span></div>
+    </div>
+    <div class="card-body">
+      {% if trend_data %}
+      <div class="barchart">
+        {% for d in trend_data %}
+        <div class="bar-group">
+          <div class="bars">
+            <div class="bar inc" style="height:{{ ((d.income / trend_max) * 155)|int if trend_max else 0 }}px" title="Masuk {{ d.income|rupiah }}"></div>
+            <div class="bar exp" style="height:{{ ((d.expense / trend_max) * 155)|int if trend_max else 0 }}px" title="Keluar {{ d.expense|rupiah }}"></div>
+          </div>
+          <div class="lbl2">{{ d.name }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}<div class="empty" style="padding:20px">Belum ada data.</div>{% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h3>Pengeluaran per Kategori</h3></div>
+    <div class="card-body">
+      {% if expense_by_cat %}
+        {% set top = expense_by_cat[0][1] %}
+        {% set palette = ['var(--primary)','#6366f1','#e11d48','#d97706','#7c3aed','#0891b2'] %}
+        {% for cat, amt in expense_by_cat %}
+        <div class="catbar">
+          <div class="row"><span>{{ cat }}</span><span class="fw-700">{{ amt|rupiah }}</span></div>
+          <div class="track"><div class="fill" style="width:{{ (amt/top*100)|int if top else 0 }}%;background:{{ palette[loop.index0 % 6] }}"></div></div>
+        </div>
+        {% endfor %}
+      {% else %}
+      <div class="empty" style="padding:20px 10px"><p style="margin:0">Belum ada pengeluaran di periode ini.</p></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Transaksi & konten -->
+<div class="grid cols-main mt-16">
+  <div class="card">
+    <div class="card-head"><h3>Transaksi Terbaru</h3><div class="spacer"></div><a href="{{ url_for('finance.index', period=selected.id if selected) }}" class="text-muted" style="font-size:.84rem">Semua →</a></div>
+    <div class="table-wrap">
+      <table class="tbl">
+        <thead><tr><th>Tanggal</th><th>Keterangan</th><th>Kategori</th><th class="num">Nominal</th></tr></thead>
+        <tbody>
+          {% for t in recent_tx %}
+          <tr>
+            <td class="text-muted" style="white-space:nowrap">{{ t.date.strftime('%d %b') }}</td>
+            <td>{{ t.description or '—' }}</td>
+            <td><span class="badge b-muted">{{ t.category }}</span></td>
+            <td class="num {{ 'text-green' if t.is_income else 'text-red' }}">{{ '+' if t.is_income else '-' }}{{ t.amount|rupiah }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="empty" style="padding:26px">Belum ada transaksi.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h3>Konten Mendatang</h3><div class="spacer"></div><a href="{{ url_for('content.index') }}" class="text-muted" style="font-size:.84rem">Kalender →</a></div>
+    <div class="card-body divide">
+      {% for c in upcoming %}
+      <div class="list-row">
+        <span class="ico {{ 'ico-red' if c.kind=='LIVE' else 'ico-purple' if c.kind=='VIDEO' else 'ico-amber' if c.kind=='FLYER' else 'ico-blue' }}">
+          {% if c.kind=='LIVE' %}<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M5 12a7 7 0 0 1 7-7M19 12a7 7 0 0 1-7 7"/></svg>
+          {% elif c.kind=='VIDEO' %}<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+          {% elif c.kind=='FLYER' %}<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+          {% else %}<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>{% endif %}
+        </span>
+        <div class="grow"><div class="t">{{ c.title }}</div><div class="s">{{ c.kind_label }} • {{ c.platform or 'tanpa platform' }}</div></div>
+        <div style="text-align:right"><div class="fw-700" style="font-size:.82rem">{{ c.scheduled_at.strftime('%d %b') }}</div><div class="text-soft" style="font-size:.74rem">{{ c.scheduled_at.strftime('%H:%M') }}</div></div>
+      </div>
+      {% else %}
+      <div class="empty" style="padding:26px 10px"><p style="margin:0">Belum ada konten terjadwal.</p></div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{% endif %}
+{% endblock %}

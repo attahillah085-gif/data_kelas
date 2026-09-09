@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Tim & Pengguna — {{ setting.business_name }}{% endblock %}
+{% block page_title %}Tim & Pengguna{% endblock %}
+{% block page_subtitle %}Kelola akses owner, pengelola, dan investor.{% endblock %}
+
+{% block topbar_actions %}
+  <button class="btn btn-primary btn-sm" data-open-dialog="dlgUser"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> <span class="hide-sm">Tambah Pengguna</span></button>
+{% endblock %}
+
+{% set role_badge = {'OWNER':'b-purple','MANAGER':'b-blue','INVESTOR':'b-green'} %}
+
+{% block content %}
+<div class="card">
+  <div class="table-wrap">
+    <table class="tbl">
+      <thead><tr><th>Nama</th><th>Email</th><th>Peran</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td><span class="flex gap-8"><span class="avatar sm">{{ u.initials }}</span><span class="fw-700">{{ u.name }}{% if u.id==current_user.id %} <span class="text-soft" style="font-weight:400">(kamu)</span>{% endif %}</span></span></td>
+          <td class="text-muted">{{ u.email }}</td>
+          <td><span class="badge {{ role_badge[u.role] }}">{{ role_labels[u.role] }}</span></td>
+          <td>{% if u.active %}<span class="badge b-green"><span class="dot-mini"></span>Aktif</span>{% else %}<span class="badge b-muted">Nonaktif</span>{% endif %}</td>
+          <td class="num">
+            <div class="flex gap-6" style="justify-content:flex-end">
+              <button class="btn btn-ghost btn-xs" data-open-dialog="dlgEditU{{ u.id }}">Edit</button>
+              {% if u.id != current_user.id %}
+              <form method="post" action="{{ url_for('main.user_toggle', uid=u.id) }}"><button class="btn btn-ghost btn-xs" type="submit">{{ 'Nonaktifkan' if u.active else 'Aktifkan' }}</button></form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Dialog edit per user -->
+{% for u in users %}
+<dialog id="dlgEditU{{ u.id }}">
+  <form method="post" action="{{ url_for('main.user_edit', uid=u.id) }}">
+    <div class="dialog-head"><h3>Edit Pengguna</h3><button type="button" class="icon-btn close-x" data-close-dialog="dlgEditU{{ u.id }}">✕</button></div>
+    <div class="dialog-body">
+      <div class="field"><label>Nama</label><input name="name" value="{{ u.name }}" required></div>
+      <div class="field"><label>Peran</label>
+        <select name="role">{% for r in roles %}<option value="{{ r }}" {{ 'selected' if u.role==r }}>{{ role_labels[r] }}</option>{% endfor %}</select>
+      </div>
+      <div class="field"><label>Reset kata sandi <span class="text-soft">(kosongkan bila tidak diubah)</span></label><input type="password" name="password" placeholder="Kata sandi baru" minlength="6"></div>
+    </div>
+    <div class="dialog-foot"><button type="button" class="btn btn-ghost" data-close-dialog="dlgEditU{{ u.id }}">Batal</button><button class="btn btn-primary" type="submit">Simpan</button></div>
+  </form>
+</dialog>
+{% endfor %}
+
+<!-- Dialog tambah -->
+<dialog id="dlgUser">
+  <form method="post" action="{{ url_for('main.user_add') }}">
+    <div class="dialog-head"><h3>Tambah Pengguna</h3><button type="button" class="icon-btn close-x" data-close-dialog="dlgUser">✕</button></div>
+    <div class="dialog-body">
+      <div class="field"><label>Nama lengkap</label><input name="name" placeholder="Nama pengguna" required></div>
+      <div class="field"><label>Email</label><input type="email" name="email" placeholder="nama@email.com" required></div>
+      <div class="form-row">
+        <div class="field"><label>Peran</label><select name="role">
+          <option value="MANAGER">Pengelola</option>
+          <option value="INVESTOR">Investor</option>
+          <option value="OWNER">Pemilik</option>
+        </select></div>
+        <div class="field"><label>Kata sandi</label><input type="password" name="password" placeholder="Min. 6 karakter" minlength="6" required></div>
+      </div>
+      <div class="muted-box" style="font-size:.8rem">
+        <strong>Peran:</strong> Pemilik = akses penuh • Pengelola = kelola keuangan, stok, konten • Investor = lihat laporan & bagi hasil.
+      </div>
+    </div>
+    <div class="dialog-foot"><button type="button" class="btn btn-ghost" data-close-dialog="dlgUser">Batal</button><button class="btn btn-primary" type="submit">Buat Akun</button></div>
+  </form>
+</dialog>
+{% endblock %}

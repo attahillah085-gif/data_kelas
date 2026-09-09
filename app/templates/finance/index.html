@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}Keuangan — {{ setting.business_name }}{% endblock %}
+{% block page_title %}Keuangan{% endblock %}
+{% block page_subtitle %}Catat pemasukan & pengeluaran per periode.{% endblock %}
+
+{% block topbar_actions %}
+  {% if current_user.can_manage %}
+  <button class="btn btn-primary btn-sm" data-open-dialog="dlgPeriod"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> <span class="hide-sm">Periode</span></button>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+
+{% if not periods %}
+  <div class="card card-pad empty">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+    <h4>Belum ada periode</h4>
+    <p>Buat periode keuangan pertama untuk mulai mencatat transaksi.</p>
+    {% if current_user.can_manage %}<button class="btn btn-primary" data-open-dialog="dlgPeriod">Buat Periode</button>{% endif %}
+  </div>
+{% else %}
+
+<!-- Kontrol periode -->
+<div class="card card-pad mb-16">
+  <div class="row-between">
+    <div class="flex flex-wrap gap-8">
+      <form method="get">
+        <select name="period" onchange="this.form.submit()" style="min-width:190px">
+          {% for p in periods %}
+          <option value="{{ p.id }}" {{ 'selected' if selected and p.id==selected.id }}>{{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </form>
+      {% if selected %}
+        <span class="badge {{ 'b-green' if selected.is_open else 'b-muted' }}"><span class="dot-mini"></span>{{ 'Terbuka' if selected.is_open else 'Ditutup' }}</span>
+        <span class="text-soft" style="font-size:.82rem;align-self:center">
+          {{ selected.start_date.strftime('%d %b %Y') }}{{ ' – ' + selected.end_date.strftime('%d %b %Y') if selected.end_date }}
+        </span>
+      {% endif %}
+    </div>
+    {% if current_user.can_manage and selected %}
+    <div class="flex gap-6">
+      <form method="post" action="{{ url_for('finance.period_toggle', pid=selected.id) }}">
+        <button class="btn btn-ghost btn-sm" type="submit">{{ 'Tutup periode' if selected.is_open else 'Buka lagi' }}</button>
+      </form>
+      <form method="post" action="{{ url_for('finance.period_delete', pid=selected.id) }}" onsubmit="return confirm('Hapus periode {{ selected.name }} beserta semua transaksinya?')">
+        <button class="btn btn-danger-soft btn-sm" type="submit" title="Hapus periode"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% if selected %}
+<!-- Ringkasan -->
+<div class="grid g-3 mb-16">
+  <div class="card kpi"><div class="top"><span class="kpi-ico ico-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span><span class="label">Total Pemasukan</span></div><div class="value">{{ selected.total_income|rupiah }}</div></div>
+  <div class="card kpi"><div class="top"><span class="kpi-ico ico-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg></span><span class="label">Total Pengeluaran</span></div><div class="value">{{ selected.total_expense|rupiah }}</div></div>
+  <div class="card kpi"><div class="top"><span class="kpi-ico {{ 'ico-blue' if selected.net_profit>=0 else 'ico-amber' }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span><span class="label">Laba Bersih</span></div><div class="value {{ 'text-green' if selected.net_profit>0 else 'text-red' if selected.net_profit<0 }}">{{ selected.net_profit|rupiah }}</div></div>
+</div>
+
+<!-- Transaksi -->
+<div class="card">
+  <div class="card-head">
+    <h3>Transaksi</h3>
+    <div class="spacer"></div>
+    <div class="pill-tabs hide-sm">
+      <a href="{{ url_for('finance.index', period=selected.id) }}" class="{{ 'active' if not kind_filter }}">Semua</a>
+      <a href="{{ url_for('finance.index', period=selected.id, kind='INCOME') }}" class="{{ 'active' if kind_filter=='INCOME' }}">Masuk</a>
+      <a href="{{ url_for('finance.index', period=selected.id, kind='EXPENSE') }}" class="{{ 'active' if kind_filter=='EXPENSE' }}">Keluar</a>
+    </div>
+    {% if current_user.can_manage and selected.is_open %}
+    <button class="btn btn-primary btn-sm" data-open-dialog="dlgTx" style="margin-left:10px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> Tambah</button>
+    {% endif %}
+  </div>
+  <div class="table-wrap">
+    <table class="tbl">
+      <thead><tr><th>Tanggal</th><th>Keterangan</th><th>Kategori</th><th>Oleh</th><th class="num">Nominal</th>{% if current_user.can_manage %}<th></th>{% endif %}</tr></thead>
+      <tbody>
+        {% for t in transactions %}
+        <tr>
+          <td class="text-muted" style="white-space:nowrap">{{ t.date.strftime('%d %b %Y') }}</td>
+          <td>{{ t.description or '—' }}{% if t.batch %} <span class="badge b-purple" style="font-size:.66rem">stok</span>{% endif %}</td>
+          <td><span class="badge {{ 'b-green' if t.is_income else 'b-red' }}">{{ t.category }}</span></td>
+          <td class="text-soft hide-sm" style="font-size:.82rem">{{ t.created_by.name if t.created_by else '—' }}</td>
+          <td class="num fw-700 {{ 'text-green' if t.is_income else 'text-red' }}">{{ '+' if t.is_income else '-' }}{{ t.amount|rupiah }}</td>
+          {% if current_user.can_manage %}
+          <td class="num">
+            <form method="post" action="{{ url_for('finance.tx_delete', tid=t.id) }}" onsubmit="return confirm('Hapus transaksi ini?')">
+              <button class="icon-btn btn-sm" style="width:32px;height:32px" title="Hapus"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button>
+            </form>
+          </td>
+          {% endif %}
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="empty" style="padding:36px">Belum ada transaksi{{ ' pada filter ini' if kind_filter }}.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endif %}
+
+<!-- ===== Dialog: Tambah Periode ===== -->
+{% if current_user.can_manage %}
+<dialog id="dlgPeriod">
+  <form method="post" action="{{ url_for('finance.period_add') }}">
+    <div class="dialog-head"><h3>Periode Baru</h3><button type="button" class="icon-btn close-x" data-close-dialog="dlgPeriod">✕</button></div>
+    <div class="dialog-body">
+      <div class="field"><label>Nama periode</label><input name="name" placeholder="mis. September 2026 / Batch #3" required></div>
+      <div class="form-row">
+        <div class="field"><label>Tanggal mulai</label><input type="date" name="start_date" value="{{ today }}"></div>
+        <div class="field"><label>Tanggal selesai <span class="text-soft">(opsional)</span></label><input type="date" name="end_date"></div>
+      </div>
+      <div class="field"><label>Catatan <span class="text-soft">(opsional)</span></label><textarea name="note" placeholder="Target, fokus, dll."></textarea></div>
+    </div>
+    <div class="dialog-foot"><button type="button" class="btn btn-ghost" data-close-dialog="dlgPeriod">Batal</button><button class="btn btn-primary" type="submit">Simpan Periode</button></div>
+  </form>
+</dialog>
+
+{% if selected %}
+<!-- ===== Dialog: Tambah Transaksi ===== -->
+<dialog id="dlgTx">
+  <form method="post" action="{{ url_for('finance.tx_add') }}">
+    <input type="hidden" name="period_id" value="{{ selected.id }}">
+    <div class="dialog-head"><h3>Tambah Transaksi</h3><button type="button" class="icon-btn close-x" data-close-dialog="dlgTx">✕</button></div>
+    <div class="dialog-body">
+      <div class="field">
+        <label>Jenis</label>
+        <div class="seg">
+          <input type="radio" name="kind" id="k_in" value="INCOME" checked><label for="k_in" style="border-color:var(--success)">↑ Pemasukan</label>
+          <input type="radio" name="kind" id="k_out" value="EXPENSE"><label for="k_out">↓ Pengeluaran</label>
+        </div>
+      </div>
+      <div class="field"><label>Nominal</label><div class="input-money"><input type="text" inputmode="numeric" data-money="txAmount" placeholder="0" required><input type="hidden" id="txAmount" name="amount"></div></div>
+      <div class="form-row">
+        <div class="field"><label>Kategori</label>
+          <input list="catList" name="category" placeholder="Pilih / ketik" value="Penjualan" required>
+          <datalist id="catList">
+            {% for c in income_categories %}<option value="{{ c }}">{% endfor %}
+            {% for c in expense_categories %}<option value="{{ c }}">{% endfor %}
+          </datalist>
+        </div>
+        <div class="field"><label>Tanggal</label><input type="date" name="date" value="{{ today }}"></div>
+      </div>
+      <div class="field"><label>Keterangan <span class="text-soft">(opsional)</span></label><input name="description" placeholder="mis. Penjualan live TikTok"></div>
+    </div>
+    <div class="dialog-foot"><button type="button" class="btn btn-ghost" data-close-dialog="dlgTx">Batal</button><button class="btn btn-primary" type="submit">Simpan</button></div>
+  </form>
+</dialog>
+{% endif %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,116 @@
+"""ThriftFlow — application factory."""
+from __future__ import annotations
+
+from datetime import datetime
+
+from flask import Flask, Response, render_template, send_from_directory
+from flask_login import current_user
+
+from .config import Config
+from .extensions import db, login_manager
+from .utils import register_filters
+
+
+def create_app(config_object: type = Config) -> Flask:
+    app = Flask(__name__, instance_relative_config=False)
+    app.config.from_object(config_object)
+
+    db.init_app(app)
+    login_manager.init_app(app)
+    register_filters(app)
+
+    # Import model agar terdaftar sebelum create_all
+    from . import models  # noqa: F401
+
+    # Blueprint
+    from .auth import bp as auth_bp
+    from .main import bp as main_bp
+    from .finance import bp as finance_bp
+    from .inventory import bp as inventory_bp
+    from .content import bp as content_bp
+    from .investors import bp as investors_bp
+    from .notifications import bp as notifications_bp
+
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(main_bp)
+    app.register_blueprint(finance_bp)
+    app.register_blueprint(inventory_bp)
+    app.register_blueprint(content_bp)
+    app.register_blueprint(investors_bp)
+    app.register_blueprint(notifications_bp)
+
+    with app.app_context():
+        db.create_all()
+
+    _register_context(app)
+    _register_pwa(app)
+    _register_errors(app)
+    return app
+
+
+def _register_context(app: Flask) -> None:
+    from .models import Notification, Setting
+
+    @app.context_processor
+    def inject_globals():
+        unread = 0
+        recent_notifs = []
+        setting = None
+        try:
+            setting = Setting.get()
+            if current_user.is_authenticated:
+                unread = Notification.query.filter_by(
+                    user_id=current_user.id, is_read=False
+                ).count()
+                recent_notifs = (
+                    Notification.query.filter_by(user_id=current_user.id)
+                    .order_by(Notification.created_at.desc())
+                    .limit(8)
+                    .all()
+                )
+        except Exception:
+            pass
+        return {
+            "setting": setting,
+            "unread_count": unread,
+            "recent_notifs": recent_notifs,
+            "now": datetime.utcnow(),
+            "vapid_public_key": app.config.get("VAPID_PUBLIC_KEY", ""),
+        }
+
+
+def _register_pwa(app: Flask) -> None:
+    @app.route("/sw.js")
+    def service_worker():
+        resp = send_from_directory(app.static_folder, "sw.js")
+        resp.headers["Content-Type"] = "application/javascript"
+        resp.headers["Service-Worker-Allowed"] = "/"
+        resp.headers["Cache-Control"] = "no-cache"
+        return resp
+
+    @app.route("/manifest.webmanifest")
+    def manifest():
+        resp = send_from_directory(app.static_folder, "manifest.webmanifest")
+        resp.headers["Content-Type"] = "application/manifest+json"
+        return resp
+
+    @app.route("/offline")
+    def offline():
+        return render_template("offline.html")
+
+
+def _register_errors(app: Flask) -> None:
+    @app.errorhandler(403)
+    def forbidden(e):  # noqa: ANN001
+        return render_template("error.html", code=403,
+                               message="Kamu tidak punya akses ke halaman ini."), 403
+
+    @app.errorhandler(404)
+    def not_found(e):  # noqa: ANN001
+        return render_template("error.html", code=404,
+                               message="Halaman tidak ditemukan."), 404
+
+    @app.errorhandler(401)
+    def unauthorized(e):  # noqa: ANN001
+        return render_template("error.html", code=401,
+                               message="Silakan masuk terlebih dahulu."), 401

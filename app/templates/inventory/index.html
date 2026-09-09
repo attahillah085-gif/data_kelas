@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Inventori — {{ setting.business_name }}{% endblock %}
+{% block page_title %}Inventori Stok{% endblock %}
+{% block page_subtitle %}Kelola bal/karung stok thrift & catat penjualan.{% endblock %}
+
+{% block topbar_actions %}
+  {% if current_user.can_manage %}
+  <button class="btn btn-primary btn-sm" data-open-dialog="dlgBatch"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> <span class="hide-sm">Tambah Stok</span></button>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+
+{% if current_user.can_manage and not open_period %}
+<div class="muted-box mb-16" style="border-left:3px solid var(--warning);font-size:.86rem">
+  ⚠️ Belum ada periode keuangan yang terbuka. Penjualan tetap mengurangi stok, tapi <strong>pemasukannya belum tercatat</strong> di keuangan. <a href="{{ url_for('finance.index') }}">Buat periode →</a>
+</div>
+{% endif %}
+
+<!-- Ringkasan -->
+<div class="grid g-4 mb-16">
+  <div class="card kpi"><div class="top"><span class="kpi-ico ico-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8"/><path d="M1 3h22v5H1z"/></svg></span><span class="label">Modal Stok Aktif</span></div><div class="value sm">{{ summary.modal|rupiah }}</div></div>
+  <div class="card kpi"><div class="top"><span class="kpi-ico ico-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7 12 3 4 7v10l8 4 8-4V7z"/><path d="M4 7l8 4 8-4"/></svg></span><span class="label">Sisa Stok</span></div><div class="value">{{ summary.pcs_sisa|angka }} <span style="font-size:.9rem;font-weight:600" class="text-muted">pcs</span></div><div class="foot">dari {{ summary.pcs_total|angka }} pcs</div></div>
+  <div class="card kpi"><div class="top"><span class="kpi-ico ico-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></span><span class="label">Terjual</span></div><div class="value">{{ summary.pcs_terjual|angka }} <span style="font-size:.9rem;font-weight:600" class="text-muted">pcs</span></div><div class="foot">Omzet {{ summary.revenue|ringkas }}</div></div>
+  <div class="card kpi"><div class="top"><span class="kpi-ico {{ 'ico-green' if summary.profit>=0 else 'ico-red' }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span><span class="label">Laba Kotor Stok</span></div><div class="value sm {{ 'text-green' if summary.profit>0 else 'text-red' if summary.profit<0 }}">{{ summary.profit|rupiah }}</div></div>
+</div>
+
+<div class="section-title">
+  <div class="pill-tabs">
+    <a href="{{ url_for('inventory.index', status='ACTIVE') }}" class="{{ 'active' if status=='ACTIVE' }}">Aktif</a>
+    <a href="{{ url_for('inventory.index', status='ARCHIVED') }}" class="{{ 'active' if status=='ARCHIVED' }}">Arsip</a>
+  </div>
+</div>
+
+{% if not batches %}
+<div class="card card-pad empty">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 8V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
+  <h4>Belum ada stok {{ 'aktif' if status=='ACTIVE' else 'diarsipkan' }}</h4>
+  {% if current_user.can_manage and status=='ACTIVE' %}<p>Tambahkan bal/karung stok pertamamu.</p><button class="btn btn-primary" data-open-dialog="dlgBatch">Tambah Stok</button>{% endif %}
+</div>
+{% else %}
+<div class="grid g-3">
+  {% for b in batches %}
+  <div class="card card-pad stack" style="gap:12px">
+    <div class="row-between">
+      <div style="min-width:0">
+        <div class="fw-800" style="font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.name }}</div>
+        <div class="flex gap-6" style="margin-top:4px"><span class="badge b-blue">{{ b.category }}</span>{% if b.is_sold_out %}<span class="badge b-muted">Habis</span>{% endif %}</div>
+      </div>
+      {% if b.supplier %}<span class="text-soft hide-sm" style="font-size:.76rem;text-align:right">{{ b.supplier }}</span>{% endif %}
+    </div>
+
+    <div>
+      <div class="row-between" style="font-size:.8rem;margin-bottom:5px"><span class="text-muted">Terjual {{ b.sold_quantity }}/{{ b.quantity }} pcs</span><span class="fw-700">{{ b.sell_through }}%</span></div>
+      <div class="progress"><span style="width:{{ b.sell_through }}%"></span></div>
+    </div>
+
+    <div class="grid g-2" style="gap:8px">
+      <div class="muted-box" style="padding:9px 11px"><div class="text-soft" style="font-size:.72rem">Modal / pcs</div><div class="fw-700">{{ b.cost_per_item|rupiah }}</div></div>
+      <div class="muted-box" style="padding:9px 11px"><div class="text-soft" style="font-size:.72rem">Harga jual</div><div class="fw-700">{{ b.selling_price|rupiah }}</div></div>
+      <div class="muted-box" style="padding:9px 11px"><div class="text-soft" style="font-size:.72rem">Omzet</div><div class="fw-700 text-green">{{ b.revenue_total|rupiah }}</div></div>
+      <div class="muted-box" style="padding:9px 11px"><div class="text-soft" style="font-size:.72rem">Laba</div><div class="fw-700 {{ 'text-green' if b.profit>=0 else 'text-red' }}">{{ b.profit|rupiah }}</div></div>
+    </div>
+
+    {% if current_user.can_manage and b.status=='ACTIVE' and b.remaining>0 %}
+    <form method="post" action="{{ url_for('inventory.sell', bid=b.id) }}" class="flex gap-6" style="align-items:flex-end">
+      <div class="field" style="margin:0;flex:0 0 62px"><label style="font-size:.72rem">Qty</label><input type="number" name="qty" min="1" max="{{ b.remaining }}" value="1" required></div>
+      <div class="field" style="margin:0;flex:1"><label style="font-size:.72rem">Harga/pcs</label><input type="number" name="price" min="0" value="{{ b.selling_price }}" required></div>
+      <button class="btn btn-success btn-sm" type="submit" style="height:42px">Jual</button>
+    </form>
+    {% endif %}
+
+    {% if current_user.can_manage %}
+    <div class="flex gap-6" style="border-top:1px solid var(--border);padding-top:10px">
+      <button class="btn btn-ghost btn-xs" data-open-dialog="dlgEdit{{ b.id }}">Edit</button>
+      <form method="post" action="{{ url_for('inventory.archive', bid=b.id) }}"><button class="btn btn-ghost btn-xs" type="submit">{{ 'Aktifkan' if b.status=='ARCHIVED' else 'Arsip' }}</button></form>
+      <form method="post" action="{{ url_for('inventory.delete', bid=b.id) }}" onsubmit="return confirm('Hapus stok {{ b.name }}?')" style="margin-left:auto"><button class="btn btn-danger-soft btn-xs" type="submit">Hapus</button></form>
+    </div>
+
+    <!-- Dialog edit per stok -->
+    <dialog id="dlgEdit{{ b.id }}">
+      <form method="post" action="{{ url_for('inventory.edit', bid=b.id) }}">
+        <div class="dialog-head"><h3>Edit Stok</h3><button type="button" class="icon-btn close-x" data-close-dialog="dlgEdit{{ b.id }}">✕</button></div>
+        <div class="dialog-body">
+          <div class="field"><label>Nama</label><input name="name" value="{{ b.name }}" required></div>
+          <div class="form-row">
+            <div class="field"><label>Kategori</label><select name="category">{% for c in categories %}<option {{ 'selected' if c==b.category }}>{{ c }}</option>{% endfor %}</select></div>
+            <div class="field"><label>Supplier</label><input name="supplier" value="{{ b.supplier }}"></div>
+          </div>
+          <div class="form-row">
+            <div class="field"><label>Jumlah total (pcs)</label><input type="number" name="quantity" min="{{ b.sold_quantity }}" value="{{ b.quantity }}"><span class="hint">Tidak bisa kurang dari yang sudah terjual ({{ b.sold_quantity }}).</span></div>
+            <div class="field"><label>Harga jual/pcs</label><input type="number" name="selling_price" min="0" value="{{ b.selling_price }}"></div>
+          </div>
+          <div class="field"><label>Catatan</label><textarea name="note">{{ b.note }}</textarea></div>
+        </div>
+        <div class="dialog-foot"><button type="button" class="btn btn-ghost" data-close-dialog="dlgEdit{{ b.id }}">Batal</button><button class="btn btn-primary" type="submit">Simpan</button></div>
+      </form>
+    </dialog>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Dialog tambah stok -->
+{% if current_user.can_manage %}
+<dialog id="dlgBatch">
+  <form method="post" action="{{ url_for('inventory.add') }}">
+    <div class="dialog-head"><h3>Tambah Stok / Bal</h3><button type="button" class="icon-btn close-x" data-close-dialog="dlgBatch">✕</button></div>
+    <div class="dialog-body">
+      <div class="field"><label>Nama stok</label><input name="name" placeholder="mis. Bal Kaos Bandung #1" required></div>
+      <div class="form-row">
+        <div class="field"><label>Kategori</label><select name="category">{% for c in categories %}<option>{{ c }}</option>{% endfor %}</select></div>
+        <div class="field"><label>Supplier <span class="text-soft">(opsional)</span></label><input name="supplier" placeholder="mis. Gudang Bandung"></div>
+      </div>
+      <div class="form-row-3">
+        <div class="field"><label>Jumlah (pcs)</label><input type="number" name="quantity" min="0" placeholder="100" required></div>
+        <div class="field"><label>Total modal beli</label><input type="number" name="cost_total" min="0" placeholder="1500000" required></div>
+        <div class="field"><label>Harga jual/pcs</label><input type="number" name="selling_price" min="0" placeholder="35000"></div>
+      </div>
+      <div class="field"><label>Tanggal beli</label><input type="date" name="purchase_date" value="{{ today }}"></div>
+      <label class="check"><input type="checkbox" name="record_expense" checked> Catat modal beli sebagai pengeluaran di periode berjalan</label>
+    </div>
+    <div class="dialog-foot"><button type="button" class="btn btn-ghost" data-close-dialog="dlgBatch">Batal</button><button class="btn btn-primary" type="submit">Simpan Stok</button></div>
+  </form>
+</dialog>
+{% endif %}
+{% endblock %}

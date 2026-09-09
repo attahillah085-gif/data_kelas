@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="id" data-theme="">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ code }} — ThriftFlow</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script>(function(){try{var t=localStorage.getItem('tf-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+</head>
+<body>
+  <div class="auth-form" style="min-height:100vh">
+    <div class="empty">
+      <div style="font-size:3.4rem;font-weight:800;color:var(--primary)">{{ code }}</div>
+      <h4>{{ message }}</h4>
+      <a class="btn btn-primary mt-16" href="{{ url_for('main.dashboard') }}">Kembali ke Dashboard</a>
+    </div>
+  </div>
+</body>
+</html>

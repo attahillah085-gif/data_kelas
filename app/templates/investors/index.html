@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Investor — {{ setting.business_name }}{% endblock %}
+{% block page_title %}Investor & Bagi Hasil{% endblock %}
+{% block page_subtitle %}Modal, kepemilikan, dan simulasi bagi hasil per periode.{% endblock %}
+
+{% block topbar_actions %}
+  {% if current_user.is_owner %}
+  <button class="btn btn-primary btn-sm" data-open-dialog="dlgInvest"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> <span class="hide-sm">Setor Modal</span></button>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+
+<!-- Simulasi bagi hasil -->
+<div class="card mb-16">
+  <div class="card-head">
+    <h3>Simulasi Bagi Hasil</h3>
+    <div class="spacer"></div>
+    {% if periods %}
+    <form method="get">
+      <select name="period" onchange="this.form.submit()" style="min-width:170px">
+        {% for p in periods %}<option value="{{ p.id }}" {{ 'selected' if selected and p.id==selected.id }}>{{ p.name }}</option>{% endfor %}
+      </select>
+    </form>
+    {% endif %}
+  </div>
+  <div class="card-body">
+    <div class="grid g-4 mb-16">
+      <div class="muted-box"><div class="text-soft" style="font-size:.74rem">Laba bersih periode</div><div class="fw-800" style="font-size:1.15rem">{{ dist.net_profit|rupiah }}</div></div>
+      <div class="muted-box"><div class="text-soft" style="font-size:.74rem">Ditahan bisnis ({{ dist.owner_percent }}%)</div><div class="fw-800" style="font-size:1.15rem">{{ dist.owner_cut|rupiah }}</div></div>
+      <div class="muted-box"><div class="text-soft" style="font-size:.74rem">Dibagi ke investor</div><div class="fw-800 text-green" style="font-size:1.15rem">{{ dist.investor_pool|rupiah }}</div></div>
+      <div class="muted-box"><div class="text-soft" style="font-size:.74rem">Total modal terkumpul</div><div class="fw-800" style="font-size:1.15rem">{{ dist.total_capital|rupiah }}</div></div>
+    </div>
+
+    {% if dist.net_profit <= 0 %}
+    <div class="muted-box" style="border-left:3px solid var(--warning);font-size:.86rem">Periode ini belum menghasilkan laba, jadi belum ada yang dibagikan. Porsi bisa berubah saat laba bertambah.</div>
+    {% endif %}
+
+    <div class="table-wrap">
+      <table class="tbl">
+        <thead><tr><th>Investor</th><th class="num">Modal</th><th class="num">Kepemilikan</th><th class="num">Estimasi Bagi Hasil</th></tr></thead>
+        <tbody>
+          {% for r in dist.shares %}
+          <tr>
+            <td><span class="flex gap-8"><span class="avatar sm">{{ r.user.initials }}</span><span><span class="fw-700">{{ r.user.name }}</span>{% if r.user.id==current_user.id %} <span class="badge b-blue" style="font-size:.66rem">kamu</span>{% endif %}</span></span></td>
+            <td class="num">{{ r.total|rupiah }}</td>
+            <td class="num"><span class="badge b-muted">{{ r.percent }}%</span></td>
+            <td class="num fw-800 text-green">{{ r.payout|rupiah }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="empty" style="padding:30px">Belum ada investor yang menyetor modal.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="text-soft mt-16" style="font-size:.78rem">Porsi bisnis ({{ dist.owner_percent }}%) bisa diubah di <a href="{{ url_for('main.settings') }}">Pengaturan</a>. Simulasi ini memakai proporsi modal tiap investor terhadap total modal.</p>
+  </div>
+</div>
+
+<!-- Riwayat setoran -->
+<div class="card">
+  <div class="card-head"><h3>Riwayat Setoran Modal</h3></div>
+  <div class="table-wrap">
+    <table class="tbl">
+      <thead><tr><th>Tanggal</th><th>Investor</th><th>Catatan</th><th class="num">Nominal</th>{% if current_user.is_owner %}<th></th>{% endif %}</tr></thead>
+      <tbody>
+        {% for inv, u in recent %}
+        <tr>
+          <td class="text-muted" style="white-space:nowrap">{{ inv.date.strftime('%d %b %Y') }}</td>
+          <td class="fw-700">{{ u.name }}</td>
+          <td class="text-muted">{{ inv.note or '—' }}</td>
+          <td class="num fw-700">{{ inv.amount|rupiah }}</td>
+          {% if current_user.is_owner %}
+          <td class="num"><form method="post" action="{{ url_for('investors.delete_investment', iid=inv.id) }}" onsubmit="return confirm('Hapus setoran ini?')"><button class="icon-btn btn-sm" style="width:32px;height:32px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button></form></td>
+          {% endif %}
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="empty" style="padding:30px">Belum ada setoran modal.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Dialog setor modal -->
+{% if current_user.is_owner %}
+<dialog id="dlgInvest">
+  <form method="post" action="{{ url_for('investors.add_investment') }}">
+    <div class="dialog-head"><h3>Setor Modal Investor</h3><button type="button" class="icon-btn close-x" data-close-dialog="dlgInvest">✕</button></div>
+    <div class="dialog-body">
+      {% if not investor_users %}
+      <div class="muted-box mb-16" style="border-left:3px solid var(--warning);font-size:.86rem">Belum ada akun berperan <strong>Investor</strong>. Buat dulu di <a href="{{ url_for('main.users') }}">Tim & Pengguna</a>.</div>
+      {% endif %}
+      <div class="field"><label>Investor</label><select name="user_id" required><option value="">Pilih investor…</option>{% for u in investor_users %}<option value="{{ u.id }}">{{ u.name }}</option>{% endfor %}</select></div>
+      <div class="field"><label>Nominal modal</label><div class="input-money"><input type="text" inputmode="numeric" data-money="invAmount" placeholder="0" required><input type="hidden" id="invAmount" name="amount"></div></div>
+      <div class="field"><label>Tanggal</label><input type="date" name="date" value="{{ today }}"></div>
+      <div class="field"><label>Catatan <span class="text-soft">(opsional)</span></label><input name="note" placeholder="mis. Tambahan modal batch 2"></div>
+      <label class="check"><input type="checkbox" name="record_income"> Catat sebagai pemasukan "Setoran Modal" di periode berjalan</label>
+    </div>
+    <div class="dialog-foot"><button type="button" class="btn btn-ghost" data-close-dialog="dlgInvest">Batal</button><button class="btn btn-primary" type="submit">Simpan</button></div>
+  </form>
+</dialog>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,23 @@
+{
+  "name": "ThriftFlow — Manajemen Bisnis Thrifting",
+  "short_name": "ThriftFlow",
+  "description": "Kelola keuangan per periode, stok, konten, dan bagi hasil investor untuk bisnis thrifting.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f4f8fd",
+  "theme_color": "#3b82f6",
+  "lang": "id",
+  "categories": ["business", "finance", "productivity"],
+  "icons": [
+    { "src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/static/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Keuangan", "url": "/keuangan" },
+    { "name": "Inventori", "url": "/inventori" },
+    { "name": "Kalender Konten", "url": "/konten" }
+  ]
+}

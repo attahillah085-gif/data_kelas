@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}Kalender Konten — {{ setting.business_name }}{% endblock %}
+{% block page_title %}Kalender Konten{% endblock %}
+{% block page_subtitle %}Jadwalkan live, video, dan flyer bisnismu.{% endblock %}
+
+{% block topbar_actions %}
+  {% if current_user.can_manage %}
+  <button class="btn btn-primary btn-sm" data-open-dialog="dlgContent"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> <span class="hide-sm">Jadwalkan</span></button>
+  {% endif %}
+{% endblock %}
+
+{% macro kind_ico(kind) %}
+  {% if kind=='LIVE' %}<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M5 12a7 7 0 0 1 7-7M19 12a7 7 0 0 1-7 7"/></svg>
+  {% elif kind=='VIDEO' %}<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+  {% elif kind=='FLYER' %}<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+  {% else %}<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>{% endif %}
+{% endmacro %}
+{% set kcolor = {'LIVE':'red','VIDEO':'purple','FLYER':'amber','POST':'blue','OTHER':'blue'} %}
+
+{% block content %}
+<div class="grid g-4 mb-16">
+  <div class="card kpi"><div class="top"><span class="kpi-ico ico-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span><span class="label">Terjadwal 7 Hari</span></div><div class="value">{{ week_count }}</div></div>
+</div>
+
+<!-- Akan datang -->
+{% if upcoming %}
+<div class="section-title"><h2>Akan Datang</h2></div>
+<div class="grid g-3 mb-24">
+  {% for c in upcoming %}
+  <div class="card card-pad">
+    <div class="flex" style="align-items:flex-start;gap:12px">
+      <span class="kpi-ico ico-{{ kcolor[c.kind] }}" style="flex:none">{{ kind_ico(c.kind) }}</span>
+      <div class="grow" style="min-width:0">
+        <div class="fw-800" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.title }}</div>
+        <div class="text-muted" style="font-size:.8rem">{{ c.kind_label }}{{ ' • ' + c.platform if c.platform }}</div>
+      </div>
+    </div>
+    <div class="muted-box mt-16 row-between" style="padding:10px 12px">
+      <div><div class="text-soft" style="font-size:.72rem">Jadwal</div><div class="fw-700" style="font-size:.86rem">{{ c.scheduled_at.strftime('%a, %d %b • %H:%M') }}</div></div>
+      {% if c.assignee %}<div style="text-align:right"><div class="text-soft" style="font-size:.72rem">PIC</div><div class="flex gap-6"><span class="avatar sm">{{ c.assignee.initials }}</span></div></div>{% endif %}
+    </div>
+    {% if current_user.can_manage %}
+    <div class="flex gap-6 mt-16">
+      <form method="post" action="{{ url_for('content.set_status', cid=c.id) }}"><input type="hidden" name="status" value="DONE"><button class="btn btn-success btn-xs" type="submit">✓ Selesai</button></form>
+      <button class="btn btn-ghost btn-xs" data-open-dialog="dlgEditC{{ c.id }}">Edit</button>
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Semua jadwal -->
+<div class="card">
+  <div class="card-head">
+    <h3>Semua Jadwal</h3>
+    <div class="spacer"></div>
+    <form method="get" class="flex gap-6">
+      <select name="kind" onchange="this.form.submit()">
+        <option value="">Semua jenis</option>
+        {% for k in kinds %}<option value="{{ k }}" {{ 'selected' if kind==k }}>{{ kind_labels[k] }}</option>{% endfor %}
+      </select>
+      <select name="status" onchange="this.form.submit()">
+        <option value="">Semua status</option>
+        <option value="PLANNED" {{ 'selected' if status=='PLANNED' }}>Direncanakan</option>
+        <option value="DONE" {{ 'selected' if status=='DONE' }}>Selesai</option>
+        <option value="CANCELED" {{ 'selected' if status=='CANCELED' }}>Batal</option>
+      </select>
+    </form>
+  </div>
+  <div class="table-wrap">
+    <table class="tbl">
+      <thead><tr><th>Judul</th><th>Jenis</th><th>Platform</th><th>Jadwal</th><th>PIC</th><th>Status</th>{% if current_user.can_manage %}<th></th>{% endif %}</tr></thead>
+      <tbody>
+        {% for c in items %}
+        <tr>
+          <td class="fw-700">{{ c.title }}</td>
+          <td><span class="badge b-{{ kcolor[c.kind] }}">{{ c.kind_label }}</span></td>
+          <td class="text-muted">{{ c.platform or '—' }}</td>
+          <td class="text-muted" style="white-space:nowrap">{{ c.scheduled_at.strftime('%d %b %Y • %H:%M') }}</td>
+          <td>{% if c.assignee %}<span class="flex gap-6"><span class="avatar sm">{{ c.assignee.initials }}</span><span class="hide-sm" style="font-size:.82rem">{{ c.assignee.name.split()[0] }}</span></span>{% else %}<span class="text-soft">—</span>{% endif %}</td>
+          <td>
+            {% if c.status=='DONE' %}<span class="badge b-green">Selesai</span>
+            {% elif c.status=='CANCELED' %}<span class="badge b-red">Batal</span>
+            {% else %}<span class="badge b-amber">Direncanakan</span>{% endif %}
+          </td>
+          {% if current_user.can_manage %}
+          <td class="num">
+            <div class="flex gap-6" style="justify-content:flex-end">
+              <form method="post" action="{{ url_for('content.set_status', cid=c.id) }}">
+                <select name="status" onchange="this.form.submit()" style="padding:6px 26px 6px 9px;font-size:.78rem">
+                  <option {{ 'selected' if c.status=='PLANNED' }} value="PLANNED">Rencana</option>
+                  <option {{ 'selected' if c.status=='DONE' }} value="DONE">Selesai</option>
+                  <option {{ 'selected' if c.status=='CANCELED' }} value="CANCELED">Batal</option>
+                </select>
+              </form>
+              <button class="icon-btn btn-sm" style="width:32px;height:32px" data-open-dialog="dlgEditC{{ c.id }}" title="Edit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+              <form method="post" action="{{ url_for('content.delete', cid=c.id) }}" onsubmit="return confirm('Hapus konten ini?')">
+                <button class="icon-btn btn-sm" style="width:32px;height:32px" title="Hapus"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button>
+              </form>
+            </div>
+          </td>
+          {% endif %}
+        </tr>
+
+        {% if current_user.can_manage %}
+        {# dialog edit di luar tabel dirender di bawah #}
+        {% endif %}
+        {% else %}
+        <tr><td colspan="7" class="empty" style="padding:36px">Belum ada konten terjadwal.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Dialog edit (dirender terpisah agar valid) -->
+{% if current_user.can_manage %}
+{% for c in items %}
+<dialog id="dlgEditC{{ c.id }}">
+  <form method="post" action="{{ url_for('content.edit', cid=c.id) }}">
+    <div class="dialog-head"><h3>Edit Konten</h3><button type="button" class="icon-btn close-x" data-close-dialog="dlgEditC{{ c.id }}">✕</button></div>
+    <div class="dialog-body">
+      <div class="field"><label>Judul</label><input name="title" value="{{ c.title }}" required></div>
+      <div class="form-row">
+        <div class="field"><label>Jenis</label><select name="kind">{% for k in kinds %}<option value="{{ k }}" {{ 'selected' if c.kind==k }}>{{ kind_labels[k] }}</option>{% endfor %}</select></div>
+        <div class="field"><label>Platform</label><select name="platform"><option value="">—</option>{% for p in platforms %}<option {{ 'selected' if c.platform==p }}>{{ p }}</option>{% endfor %}</select></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Tanggal & jam</label><input type="datetime-local" name="scheduled_at" value="{{ c.scheduled_at.strftime('%Y-%m-%dT%H:%M') }}"></div>
+        <div class="field"><label>Penanggung jawab</label><select name="assignee_id"><option value="">—</option>{% for u in assignees %}<option value="{{ u.id }}" {{ 'selected' if c.assignee_id==u.id }}>{{ u.name }}</option>{% endfor %}</select></div>
+      </div>
+      <div class="field"><label>Catatan</label><textarea name="note">{{ c.note }}</textarea></div>
+    </div>
+    <div class="dialog-foot"><button type="button" class="btn btn-ghost" data-close-dialog="dlgEditC{{ c.id }}">Batal</button><button class="btn btn-primary" type="submit">Simpan</button></div>
+  </form>
+</dialog>
+{% endfor %}
+
+<!-- Dialog tambah -->
+<dialog id="dlgContent">
+  <form method="post" action="{{ url_for('content.add') }}">
+    <div class="dialog-head"><h3>Jadwalkan Konten</h3><button type="button" class="icon-btn close-x" data-close-dialog="dlgContent">✕</button></div>
+    <div class="dialog-body">
+      <div class="field"><label>Judul</label><input name="title" placeholder="mis. Live Thrift Jumat Malam" required></div>
+      <div class="form-row">
+        <div class="field"><label>Jenis</label><select name="kind">{% for k in kinds %}<option value="{{ k }}">{{ kind_labels[k] }}</option>{% endfor %}</select></div>
+        <div class="field"><label>Platform</label><select name="platform"><option value="">—</option>{% for p in platforms %}<option>{{ p }}</option>{% endfor %}</select></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Tanggal & jam</label><input type="datetime-local" name="scheduled_at" value="{{ now_local }}" required></div>
+        <div class="field"><label>Penanggung jawab</label><select name="assignee_id"><option value="">—</option>{% for u in assignees %}<option value="{{ u.id }}">{{ u.name }}</option>{% endfor %}</select></div>
+      </div>
+      <div class="field"><label>Catatan <span class="text-soft">(opsional)</span></label><textarea name="note" placeholder="Rincian, produk yang dijual, dll."></textarea></div>
+    </div>
+    <div class="dialog-foot"><button type="button" class="btn btn-ghost" data-close-dialog="dlgContent">Batal</button><button class="btn btn-primary" type="submit">Simpan Jadwal</button></div>
+  </form>
+</dialog>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Pengaturan — {{ setting.business_name }}{% endblock %}
+{% block page_title %}Pengaturan{% endblock %}
+{% block page_subtitle %}Identitas bisnis & skema bagi hasil.{% endblock %}
+
+{% block content %}
+<div class="grid cols-main">
+  <div class="card">
+    <div class="card-head"><h3>Profil Bisnis</h3></div>
+    <form method="post" action="{{ url_for('main.settings') }}">
+      <div class="card-body">
+        <div class="field"><label>Nama bisnis</label><input name="business_name" value="{{ s.business_name }}" required></div>
+        <div class="field"><label>Tagline</label><input name="tagline" value="{{ s.tagline }}" placeholder="mis. Thrift berkualitas harga bersahabat"></div>
+        <div class="form-row">
+          <div class="field"><label>Simbol mata uang</label><input name="currency_symbol" value="{{ s.currency_symbol }}"></div>
+          <div class="field">
+            <label>Porsi laba ditahan bisnis (%)</label>
+            <input type="number" name="owner_share_percent" min="0" max="100" value="{{ s.owner_share_percent }}">
+            <span class="hint">Sisanya ({{ 100 - s.owner_share_percent }}%) dibagi ke investor sesuai modal.</span>
+          </div>
+        </div>
+      </div>
+      <div class="dialog-foot" style="border-top:1px solid var(--border)"><button class="btn btn-primary" type="submit">Simpan Pengaturan</button></div>
+    </form>
+  </div>
+
+  <div class="stack">
+    <div class="card card-pad">
+      <h3 style="font-size:.98rem">Notifikasi Push</h3>
+      <p class="text-muted" style="font-size:.85rem">Status: <strong>{{ 'Aktif' if vapid_public_key else 'Belum dikonfigurasi' }}</strong></p>
+      {% if not vapid_public_key %}
+      <p class="text-soft" style="font-size:.8rem">Buat kunci VAPID: <code>python seed.py --vapid</code>, lalu tempel ke file <code>.env</code>.</p>
+      {% else %}
+      <button class="btn btn-soft btn-sm" id="enablePushBtn">Aktifkan di perangkat ini</button>
+      {% endif %}
+    </div>
+    <div class="card card-pad">
+      <h3 style="font-size:.98rem">Tentang ThriftFlow</h3>
+      <p class="text-muted" style="font-size:.85rem">Aplikasi ini adalah PWA — bisa dipasang ke layar utama HP dan berjalan seperti aplikasi biasa. Gunakan tombol "Pasang" saat muncul, atau menu browser → "Tambahkan ke layar utama".</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="id" data-theme="">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Setup Awal — ThriftFlow</title>
+  <link rel="icon" href="{{ url_for('static', filename='icons/favicon.svg') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script>(function(){try{var t=localStorage.getItem('tf-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+</head>
+<body>
+<div class="auth-form" style="min-height:100vh">
+  <div class="auth-card">
+    <div class="brand" style="justify-content:center;margin-bottom:10px">
+      <div class="brand-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-3.5l-1-2h-7l-1 2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z"/><circle cx="12" cy="13" r="3.5"/></svg></div>
+      <div class="brand-name" style="font-size:1.2rem">ThriftFlow</div>
+    </div>
+    <div class="card card-pad">
+      <span class="badge b-blue mb-8">Langkah pertama</span>
+      <h1 style="font-size:1.4rem">Buat akun pemilik</h1>
+      <p class="text-muted mb-16">Akun ini akan menjadi <strong>Owner</strong> dengan akses penuh untuk mengelola tim, keuangan, dan seluruh bisnis.</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="muted-box mb-16" style="border-left:3px solid var(--danger);font-size:.86rem">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+
+      <form method="post" action="{{ url_for('auth.setup') }}">
+        <div class="field"><label>Nama lengkap</label><input name="name" placeholder="mis. Kaisar" required autofocus></div>
+        <div class="field"><label>Email</label><input type="email" name="email" placeholder="owner@email.com" required></div>
+        <div class="field"><label>Kata sandi</label><input type="password" name="password" placeholder="Minimal 6 karakter" minlength="6" required></div>
+        <button class="btn btn-primary btn-block" type="submit">Buat Akun & Mulai</button>
+      </form>
+    </div>
+  </div>
+</div>
+</body>
+</html>
