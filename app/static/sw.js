@@ -1,5 +1,5 @@
-/* ThriftFlow Service Worker */
-const CACHE = "thriftflow-v1";
+/* The Girl House Service Worker */
+const CACHE = "thegirlhouse-v2";
 const APP_SHELL = [
   "/offline",
   "/static/css/style.css",
@@ -31,14 +31,14 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // Aset statis: cache-first
+  // Aset statis: network-first (perubahan langsung tampil), fallback cache saat offline
   if (url.pathname.startsWith("/static/")) {
     event.respondWith(
-      caches.match(req).then((cached) => cached || fetch(req).then((res) => {
+      fetch(req).then((res) => {
         const copy = res.clone();
         caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
         return res;
-      }).catch(() => cached))
+      }).catch(() => caches.match(req))
     );
     return;
   }
@@ -54,7 +54,7 @@ self.addEventListener("fetch", (event) => {
 
 /* ---- Web Push ---- */
 self.addEventListener("push", (event) => {
-  let data = { title: "ThriftFlow", body: "Ada pembaruan baru.", url: "/" };
+  let data = { title: "The Girl House", body: "Ada pembaruan baru.", url: "/" };
   try { if (event.data) data = Object.assign(data, event.data.json()); } catch (e) {
     if (event.data) data.body = event.data.text();
   }
