@@ -93,6 +93,58 @@
   </div>
 </div>
 
+{% if current_user.can_manage %}
+<!-- Toko Online -->
+{% set scolor = {'PENDING':'b-amber','CONFIRMED':'b-blue','PAID':'b-green','SHIPPED':'b-purple','DONE':'b-green','CANCELED':'b-red'} %}
+<div class="section-title mt-24"><h2>🛍️ Toko Online</h2><div class="spacer"></div><a href="{{ url_for('catalog.orders') }}" class="text-muted" style="font-size:.84rem">Kelola pesanan →</a></div>
+<div class="grid g-4">
+  <div class="card kpi"><div class="top"><span class="kpi-ico ico-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></span><span class="label">Pesanan Baru</span></div><div class="value">{{ store_pending }}</div><div class="foot">menunggu konfirmasi</div></div>
+  <div class="card kpi"><div class="top"><span class="kpi-ico ico-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></span><span class="label">Total Pesanan</span></div><div class="value">{{ store_orders }}</div></div>
+  <div class="card kpi"><div class="top"><span class="kpi-ico ico-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span><span class="label">Omzet Toko</span></div><div class="value sm">{{ store_revenue|rupiah }}</div><div class="foot">pesanan terbayar</div></div>
+  <div class="card kpi"><div class="top"><span class="kpi-ico ico-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7 12 3 4 7v10l8 4 8-4V7z"/><path d="M4 7l8 4 8-4"/></svg></span><span class="label">Produk Aktif</span></div><div class="value">{{ active_products }}</div></div>
+</div>
+
+<div class="grid cols-main mt-16">
+  <div class="card">
+    <div class="card-head"><h3>Pesanan Terbaru</h3><div class="spacer"></div><a href="{{ url_for('catalog.orders') }}" class="text-muted" style="font-size:.84rem">Semua →</a></div>
+    <div class="table-wrap">
+      <table class="tbl">
+        <thead><tr><th>Kode</th><th>Pelanggan</th><th class="num">Total</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for o in recent_orders %}
+          <tr onclick="location.href='{{ url_for('catalog.order_detail', oid=o.id) }}'" style="cursor:pointer">
+            <td class="fw-800">{{ o.code }}</td>
+            <td>{{ o.customer_name }}</td>
+            <td class="num fw-700">{{ o.total|rupiah }}</td>
+            <td><span class="badge {{ scolor[o.status] }}">{{ o.status_label }}</span></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="empty" style="padding:26px">Belum ada pesanan dari toko.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h3>Stok Menipis</h3><div class="spacer"></div><a href="{{ url_for('catalog.products') }}" class="text-muted" style="font-size:.84rem">Produk →</a></div>
+    <div class="card-body divide">
+      {% for p in low_stock %}
+      <div class="list-row">
+        <span style="width:38px;height:38px;border-radius:10px;overflow:hidden;background:var(--surface-2);flex:none;display:grid;place-items:center">
+          {% if p.image %}<img src="{{ p.image }}" style="width:100%;height:100%;object-fit:cover" alt="">{% endif %}
+        </span>
+        <div class="grow"><div class="t">{{ p.name }}</div><div class="s">{{ p.category }}</div></div>
+        <span class="badge b-red">Sisa {{ p.stock }}</span>
+      </div>
+      {% else %}
+      <div class="empty" style="padding:26px 10px"><p style="margin:0">Semua stok aman 👍</p></div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
 <!-- Grafik & rincian -->
 <div class="grid cols-main mt-16">
   <div class="card">

@@ -11,13 +11,17 @@ from .models import (
     ContentSchedule,
     InventoryBatch,
     Investment,
+    Order,
     Period,
+    Product,
     Setting,
     Transaction,
     User,
     CONTENT_PLANNED,
     EXPENSE,
     INCOME,
+    ORDER_COUNTED,
+    ORDER_PENDING,
     ROLES,
     ROLE_LABELS,
     ROLE_OWNER,
@@ -96,6 +100,19 @@ def dashboard():
         ContentSchedule.scheduled_at <= now + timedelta(days=7),
     ).count()
 
+    # Statistik toko online
+    store_pending = Order.query.filter_by(status=ORDER_PENDING).count()
+    store_orders = Order.query.count()
+    store_revenue = db.session.query(db.func.coalesce(db.func.sum(Order.total), 0)).filter(
+        Order.status.in_(list(ORDER_COUNTED))
+    ).scalar() or 0
+    active_products = Product.query.filter_by(active=True).count()
+    low_stock = (
+        Product.query.filter(Product.active.is_(True), Product.stock > 0, Product.stock <= 3)
+        .order_by(Product.stock.asc()).limit(5).all()
+    )
+    recent_orders = Order.query.order_by(Order.created_at.desc()).limit(5).all()
+
     # Bagian khusus investor
     my_investment = my_percent = my_payout = 0
     if current_user.is_investor:
@@ -126,6 +143,12 @@ def dashboard():
         my_investment=my_investment,
         my_percent=my_percent,
         my_payout=my_payout,
+        store_pending=store_pending,
+        store_orders=store_orders,
+        store_revenue=store_revenue,
+        active_products=active_products,
+        low_stock=low_stock,
+        recent_orders=recent_orders,
     )
 
 

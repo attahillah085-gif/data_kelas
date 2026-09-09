@@ -22,6 +22,7 @@ aplikasi biasa dan mendukung **notifikasi push**. Tema warna **biru–putih soft
 | **Inventori stok** | Kelola bal/karung thrift, harga modal & jual, progres terjual, laba per stok, dan **catat penjualan** yang otomatis jadi pemasukan di keuangan. |
 | **Kalender konten** | Jadwalkan **live, video/reels, flyer, postingan**; tetapkan penanggung jawab; status rencana/selesai/batal; **pengingat otomatis** menjelang jadwal. |
 | **Investor & bagi hasil** | Catat setoran modal, hitung kepemilikan (%), dan **simulasi bagi hasil per periode** sesuai proporsi modal. |
+| **Toko online (marketplace)** | Storefront publik: katalog produk + foto, keranjang, checkout via **WhatsApp**, halaman pesanan. Panel admin kelola produk & pesanan. Pesanan terbayar **otomatis mengurangi stok & tercatat sebagai pemasukan** di keuangan. |
 | **Notifikasi** | Notifikasi in-app + **Web Push** ke HP/desktop (opsional, via VAPID). |
 | **Multi-user** | Peran **Owner** (akses penuh), **Pengelola** (kelola operasional), **Investor** (lihat laporan & bagi hasil). |
 
@@ -128,6 +129,8 @@ app/
   content.py        # kalender konten
   investors.py      # investor & bagi hasil
   notifications.py  # notifikasi + Web Push
+  store.py          # storefront publik (katalog, keranjang, checkout)
+  catalog.py        # panel admin produk & pesanan
   templates/        # halaman (Jinja2)
   static/           # css, js, ikon, manifest, service worker
 run.py              # entry pengembangan
