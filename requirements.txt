@@ -12,5 +12,5 @@ pywebpush==2.0.3
 # === Produksi (opsional) ===
 # gunicorn untuk menjalankan di server produksi:  gunicorn "app:create_app()"
 gunicorn==23.0.0
-# psycopg untuk PostgreSQL (set DATABASE_URL=postgresql+psycopg://...)
-# psycopg[binary]==3.2.3
+# psycopg untuk PostgreSQL (dipakai bila DATABASE_URL di-set, mis. di Railway/Render)
+psycopg[binary]==3.2.3

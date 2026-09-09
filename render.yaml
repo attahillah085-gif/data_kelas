@@ -1,0 +1,28 @@
+# Blueprint Render — sekali klik membuat web service + database PostgreSQL.
+# Cara pakai: dashboard.render.com → New → Blueprint → pilih repo ini.
+services:
+  - type: web
+    name: the-girl-house
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn "app:create_app()" --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true          # Render membuat kunci acak otomatis
+      - key: DATABASE_URL
+        fromDatabase:
+          name: girlhouse-db
+          property: connectionString
+      - key: VAPID_SUBJECT
+        value: mailto:admin@thegirlhouse.id
+      # Untuk notifikasi push (opsional), isi 2 nilai di bawah lewat dashboard Render
+      # setelah menjalankan:  python seed.py --vapid
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+
+databases:
+  - name: girlhouse-db
+    plan: free
