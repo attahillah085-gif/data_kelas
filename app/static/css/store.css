@@ -146,6 +146,32 @@ body.store { background: var(--bg); }
 .store-copy { padding: 0 20px 28px; color: var(--text-soft); font-size: .82rem; }
 .btn-block.mt-8 { margin-top: 8px; }
 
+/* ---------- Halaman info (Tentang/FAQ/Cara Order/Kebijakan) ---------- */
+.info-page { padding-bottom: 48px; max-width: 860px; }
+.info-hero { padding: 18px 0 22px; }
+.info-hero h1 { font-size: clamp(1.7rem, 4vw, 2.4rem); margin: 12px 0 8px; }
+.info-hero .lead { color: var(--text-muted); font-size: 1.05rem; max-width: 620px; }
+.prose { color: var(--text); line-height: 1.7; }
+.prose h3 { margin: 26px 0 10px; font-size: 1.2rem; }
+.prose h4 { margin: 0 0 6px; }
+.prose p { margin: 0 0 14px; }
+.faq-list { display: flex; flex-direction: column; gap: 10px; }
+.faq-item { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 4px 16px; }
+.faq-item summary { cursor: pointer; font-weight: 650; padding: 14px 0; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::after { content: "+"; font-size: 1.3rem; color: var(--text-soft); }
+.faq-item[open] summary::after { content: "–"; }
+.faq-item p { color: var(--text-muted); padding: 0 0 14px; margin: 0; }
+.steps { display: flex; flex-direction: column; gap: 14px; }
+.step { display: flex; gap: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px; align-items: flex-start; }
+.step-no { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 800;
+  background: var(--primary-soft); color: var(--primary-strong); font-family: var(--font-display); }
+.step h4 { margin: 4px 0 4px; }
+.step p { margin: 0; }
+.store-foot-cols { display: flex; gap: 40px; flex-wrap: wrap; }
+.store-foot-links { display: flex; flex-direction: column; gap: 8px; }
+.foot-title { font-weight: 700; font-size: .82rem; color: var(--text); margin-bottom: 2px; }
+
 /* Tombol WhatsApp mengambang */
 .wa-float { position: fixed; right: 18px; bottom: 18px; z-index: 120;
   width: 56px; height: 56px; border-radius: 50%; background: #25d366; color: #fff;

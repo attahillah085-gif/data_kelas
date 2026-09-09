@@ -43,6 +43,8 @@ def main():
     print("== Publik ==")
     ok(c.get("/").status_code == 200, "GET / (toko)")
     ok(c.get("/keranjang").status_code == 200, "GET /keranjang")
+    for path in ["/tentang", "/faq", "/cara-order", "/kebijakan", "/sitemap.xml", "/robots.txt"]:
+        ok(c.get(path).status_code == 200, f"GET {path}")
 
     print("== Setup pengelola pertama ==")
     # Saat belum ada user, /login mengarah ke /setup

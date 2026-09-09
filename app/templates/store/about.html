@@ -1,0 +1,33 @@
+{% extends "store/store_base.html" %}
+{% block title %}Tentang Kami — {{ setting.business_name }}{% endblock %}
+{% block meta_desc %}Kenalan dengan {{ setting.business_name }}: {{ setting.shop_description }}{% endblock %}
+
+{% block content %}
+<div class="store-wrap info-page">
+  <nav class="crumbs"><a href="{{ url_for('store.index') }}">Beranda</a> › <span>Tentang Kami</span></nav>
+  <header class="info-hero">
+    <span class="hero-eyebrow" style="color:var(--primary-strong);background:var(--primary-soft)">✦ Tentang Kami</span>
+    <h1>{{ setting.business_name }}</h1>
+    <p class="lead">{{ setting.shop_description }}</p>
+  </header>
+
+  <div class="prose">
+    <p>Selamat datang di <strong>{{ setting.business_name }}</strong> — {{ setting.tagline|lower }}. Kami menghadirkan koleksi thrift & distro pilihan yang dikurasi dengan teliti: kualitas terjaga, gaya kekinian, dengan harga yang bersahabat di kantong.</p>
+
+    <h3>Kenapa belanja di sini?</h3>
+    <div class="grid g-3" style="margin:16px 0">
+      <div class="card card-pad"><h4>🧵 Kualitas terkurasi</h4><p class="text-muted" style="margin:0">Setiap item dicek kondisinya sebelum dijual.</p></div>
+      <div class="card card-pad"><h4>💸 Harga bersahabat</h4><p class="text-muted" style="margin:0">Gaya keren tanpa bikin dompet menjerit.</p></div>
+      <div class="card card-pad"><h4>🔄 Update rutin</h4><p class="text-muted" style="margin:0">Stok baru datang tiap minggu — pantau terus!</p></div>
+    </div>
+
+    <h3>Hubungi kami</h3>
+    <p>Ada pertanyaan atau mau tanya stok? Chat kami langsung:</p>
+    <div class="flex gap-8" style="flex-wrap:wrap">
+      {% if setting.whatsapp_number %}<a class="btn btn-success" href="https://wa.me/{{ setting.whatsapp_number }}" target="_blank">WhatsApp</a>{% endif %}
+      {% if setting.instagram %}<a class="btn btn-ghost" href="https://instagram.com/{{ setting.instagram|replace('@','') }}" target="_blank">Instagram</a>{% endif %}
+      <a class="btn btn-primary" href="{{ url_for('store.index') }}">Belanja Sekarang</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

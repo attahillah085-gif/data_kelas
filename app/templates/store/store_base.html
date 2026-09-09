@@ -6,7 +6,16 @@
   <meta name="theme-color" content="#9b6a4f" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#211611" media="(prefers-color-scheme: dark)">
   <title>{% block title %}{{ setting.business_name }} — Toko Online{% endblock %}</title>
-  <meta name="description" content="{{ setting.shop_description }}">
+  <meta name="description" content="{% block meta_desc %}{{ setting.shop_description }}{% endblock %}">
+  <link rel="canonical" href="{{ request.base_url }}">
+  <!-- Open Graph / social preview -->
+  <meta property="og:site_name" content="{{ setting.business_name }}">
+  <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+  <meta property="og:url" content="{{ request.url }}">
+  <meta property="og:title" content="{% block og_title %}{{ setting.business_name }} — {{ setting.tagline }}{% endblock %}">
+  <meta property="og:description" content="{% block og_desc %}{{ setting.shop_description }}{% endblock %}">
+  <meta property="og:image" content="{% block og_image %}{{ (brand_logo or url_for('static', filename='icons/icon-512.png')) }}{% endblock %}">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="manifest" href="{{ url_for('manifest') }}">
   <link rel="icon" href="{{ url_for('static', filename='icons/favicon.svg') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
@@ -73,10 +82,26 @@
       </div>
       <p class="text-muted" style="max-width:340px;font-size:.88rem">{{ setting.shop_description }}</p>
     </div>
-    <div class="store-foot-links">
-      {% if setting.whatsapp_number %}<a href="https://wa.me/{{ setting.whatsapp_number }}" target="_blank">WhatsApp</a>{% endif %}
-      {% if setting.instagram %}<a href="https://instagram.com/{{ setting.instagram|replace('@','') }}" target="_blank">Instagram</a>{% endif %}
-      {% if setting.tiktok %}<a href="https://tiktok.com/@{{ setting.tiktok|replace('@','') }}" target="_blank">TikTok</a>{% endif %}
+    <div class="store-foot-cols">
+      <div class="store-foot-links">
+        <span class="foot-title">Toko</span>
+        <a href="{{ url_for('store.index') }}">Semua Produk</a>
+        <a href="{{ url_for('store.about') }}">Tentang Kami</a>
+        <a href="{{ url_for('store.how_to_order') }}">Cara Order</a>
+      </div>
+      <div class="store-foot-links">
+        <span class="foot-title">Bantuan</span>
+        <a href="{{ url_for('store.faq') }}">FAQ</a>
+        <a href="{{ url_for('store.policy') }}">Kebijakan</a>
+        {% if setting.whatsapp_number %}<a href="https://wa.me/{{ setting.whatsapp_number }}" target="_blank">WhatsApp</a>{% endif %}
+      </div>
+      {% if setting.instagram or setting.tiktok %}
+      <div class="store-foot-links">
+        <span class="foot-title">Ikuti</span>
+        {% if setting.instagram %}<a href="https://instagram.com/{{ setting.instagram|replace('@','') }}" target="_blank">Instagram</a>{% endif %}
+        {% if setting.tiktok %}<a href="https://tiktok.com/@{{ setting.tiktok|replace('@','') }}" target="_blank">TikTok</a>{% endif %}
+      </div>
+      {% endif %}
     </div>
   </div>
   <div class="store-wrap store-copy">© {{ now.year }} {{ setting.business_name }} · dibuat dengan ❤</div>

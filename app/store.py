@@ -5,6 +5,7 @@ import json
 
 from flask import (
     Blueprint,
+    Response,
     abort,
     flash,
     redirect,
@@ -164,3 +165,58 @@ def order(code):
     wa = whatsapp_link(setting.whatsapp_number, "\n".join(lines)) if setting.whatsapp_number else ""
 
     return render_template("store/order.html", o=o, setting=setting, wa=wa)
+
+
+# ---------------- Halaman info ----------------
+@bp.route("/tentang")
+def about():
+    return render_template("store/about.html", setting=Setting.get())
+
+
+@bp.route("/faq")
+def faq():
+    return render_template("store/faq.html", setting=Setting.get())
+
+
+@bp.route("/cara-order")
+def how_to_order():
+    return render_template("store/how_to_order.html", setting=Setting.get())
+
+
+@bp.route("/kebijakan")
+def policy():
+    return render_template("store/policy.html", setting=Setting.get())
+
+
+# ---------------- SEO: robots & sitemap ----------------
+@bp.route("/robots.txt")
+def robots():
+    body = "\n".join([
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /kelola/",
+        "Disallow: /dashboard",
+        f"Sitemap: {request.url_root}sitemap.xml",
+    ])
+    return Response(body, mimetype="text/plain")
+
+
+@bp.route("/sitemap.xml")
+def sitemap():
+    root = request.url_root[:-1]
+    urls = [
+        (root + url_for("store.index"), "1.0"),
+        (root + url_for("store.about"), "0.5"),
+        (root + url_for("store.faq"), "0.5"),
+        (root + url_for("store.how_to_order"), "0.5"),
+        (root + url_for("store.policy"), "0.4"),
+    ]
+    for p in Product.query.filter_by(active=True).all():
+        urls.append((root + url_for("store.product", slug=p.slug), "0.8"))
+
+    parts = ['<?xml version="1.0" encoding="UTF-8"?>',
+             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for loc, pr in urls:
+        parts.append(f"<url><loc>{loc}</loc><priority>{pr}</priority></url>")
+    parts.append("</urlset>")
+    return Response("\n".join(parts), mimetype="application/xml")

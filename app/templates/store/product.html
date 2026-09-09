@@ -1,5 +1,32 @@
 {% extends "store/store_base.html" %}
+{% set p_desc = (p.description[:157] ~ '…') if p.description and p.description|length > 158 else (p.description or (p.name ~ ' — ' ~ p.category)) %}
+{% set p_img_abs = (p.image if p.image and p.image.startswith('http') else (request.url_root[:-1] ~ p.image)) if p.image else url_for('static', filename='icons/icon-512.png') %}
 {% block title %}{{ p.name }} — {{ setting.business_name }}{% endblock %}
+{% block meta_desc %}{{ p_desc }}{% endblock %}
+{% block og_type %}product{% endblock %}
+{% block og_title %}{{ p.name }} — {{ setting.business_name }}{% endblock %}
+{% block og_desc %}{{ p_desc }}{% endblock %}
+{% block og_image %}{{ p_img_abs }}{% endblock %}
+{% block extra_head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": {{ p.name|tojson }},
+  "image": {{ p_img_abs|tojson }},
+  "description": {{ (p.description or p.name)|tojson }},
+  "category": {{ p.category|tojson }},
+  "brand": { "@type": "Brand", "name": {{ setting.business_name|tojson }} },
+  "offers": {
+    "@type": "Offer",
+    "url": {{ request.url|tojson }},
+    "priceCurrency": "IDR",
+    "price": "{{ p.price }}",
+    "availability": "https://schema.org/{{ 'InStock' if p.in_stock else 'OutOfStock' }}"
+  }
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <div class="store-wrap">

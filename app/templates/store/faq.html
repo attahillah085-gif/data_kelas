@@ -1,0 +1,25 @@
+{% extends "store/store_base.html" %}
+{% block title %}FAQ — {{ setting.business_name }}{% endblock %}
+{% block meta_desc %}Pertanyaan yang sering diajukan seputar belanja di {{ setting.business_name }}: cara order, pembayaran, pengiriman, ukuran, dan pengembalian.{% endblock %}
+
+{% block content %}
+<div class="store-wrap info-page">
+  <nav class="crumbs"><a href="{{ url_for('store.index') }}">Beranda</a> › <span>FAQ</span></nav>
+  <header class="info-hero">
+    <span class="hero-eyebrow" style="color:var(--primary-strong);background:var(--primary-soft)">✦ Bantuan</span>
+    <h1>Pertanyaan Umum (FAQ)</h1>
+    <p class="lead">Hal-hal yang sering ditanyakan sebelum belanja.</p>
+  </header>
+
+  <div class="faq-list">
+    <details class="faq-item"><summary>Bagaimana cara memesan?</summary><p>Pilih produk → klik <strong>Keranjang</strong> → buka keranjang → <strong>Checkout</strong> → isi data → konfirmasi lewat WhatsApp. Panduan lengkap ada di halaman <a href="{{ url_for('store.how_to_order') }}">Cara Order</a>.</p></details>
+    <details class="faq-item"><summary>Metode pembayaran apa saja?</summary><p>Pembayaran dikonfirmasi via WhatsApp — bisa transfer bank atau e-wallet. Detail rekening akan diberikan admin saat konfirmasi pesanan.</p></details>
+    <details class="faq-item"><summary>Berapa lama pengiriman?</summary><p>Pesanan diproses 1×24 jam setelah pembayaran. Lama pengiriman tergantung ekspedisi & lokasi tujuan.</p></details>
+    <details class="faq-item"><summary>Apakah ukuran bisa ditanyakan dulu?</summary><p>Tentu! Ukuran & kondisi tiap item tercantum di halaman produk. Kalau masih ragu, chat kami dulu sebelum order.</p></details>
+    <details class="faq-item"><summary>Apakah barang bisa ditukar/dikembalikan?</summary><p>Karena sebagian besar item thrift bersifat terbatas, mohon cek detail sebelum membeli. Kebijakan lengkap ada di halaman <a href="{{ url_for('store.policy') }}">Kebijakan</a>.</p></details>
+    <details class="faq-item"><summary>Stok update kapan?</summary><p>Stok baru biasanya datang tiap minggu. Ikuti Instagram kami{% if setting.instagram %} <a href="https://instagram.com/{{ setting.instagram|replace('@','') }}" target="_blank">@{{ setting.instagram|replace('@','') }}</a>{% endif %} biar nggak ketinggalan.</p></details>
+  </div>
+
+  <div class="muted-box" style="margin-top:24px">Masih ada pertanyaan? {% if setting.whatsapp_number %}<a href="https://wa.me/{{ setting.whatsapp_number }}" target="_blank">Chat WhatsApp kami →</a>{% else %}Hubungi kami ya.{% endif %}</div>
+</div>
+{% endblock %}

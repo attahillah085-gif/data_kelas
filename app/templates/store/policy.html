@@ -1,0 +1,30 @@
+{% extends "store/store_base.html" %}
+{% block title %}Kebijakan — {{ setting.business_name }}{% endblock %}
+{% block meta_desc %}Kebijakan belanja, privasi, dan pengembalian di {{ setting.business_name }}.{% endblock %}
+
+{% block content %}
+<div class="store-wrap info-page">
+  <nav class="crumbs"><a href="{{ url_for('store.index') }}">Beranda</a> › <span>Kebijakan</span></nav>
+  <header class="info-hero">
+    <span class="hero-eyebrow" style="color:var(--primary-strong);background:var(--primary-soft)">✦ Kebijakan</span>
+    <h1>Kebijakan Toko</h1>
+    <p class="lead">Ketentuan belanja, privasi, dan pengembalian.</p>
+  </header>
+
+  <div class="prose">
+    <h3>Pemesanan & Pembayaran</h3>
+    <p>Pesanan dianggap sah setelah pembayaran dikonfirmasi. Pembayaran dilakukan via transfer/e-wallet sesuai instruksi admin di WhatsApp. Pesanan yang tidak dibayar dalam 1×24 jam dapat dibatalkan agar stok kembali tersedia.</p>
+
+    <h3>Pengiriman</h3>
+    <p>Pesanan diproses setelah pembayaran diterima. Estimasi waktu tergantung ekspedisi dan tujuan. Nomor resi akan diberikan setelah barang dikirim.</p>
+
+    <h3>Pengembalian & Penukaran</h3>
+    <p>Sebagian besar item thrift bersifat terbatas dan dijual apa adanya (kondisi tercantum di halaman produk). Komplain karena barang tidak sesuai/rusak dapat diajukan maksimal 1×24 jam setelah barang diterima dengan menyertakan video unboxing.</p>
+
+    <h3>Privasi</h3>
+    <p>Data yang kamu berikan (nama, nomor WhatsApp, alamat) hanya digunakan untuk memproses & mengirim pesanan. Kami tidak membagikan datamu ke pihak lain untuk tujuan lain.</p>
+
+    <p class="text-soft" style="font-size:.85rem;margin-top:20px">Kebijakan dapat diperbarui sewaktu-waktu. Untuk pertanyaan, hubungi kami{% if setting.whatsapp_number %} via <a href="https://wa.me/{{ setting.whatsapp_number }}" target="_blank">WhatsApp</a>{% endif %}.</p>
+  </div>
+</div>
+{% endblock %}

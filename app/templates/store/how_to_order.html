@@ -1,0 +1,26 @@
+{% extends "store/store_base.html" %}
+{% block title %}Cara Order — {{ setting.business_name }}{% endblock %}
+{% block meta_desc %}Panduan belanja di {{ setting.business_name }} dalam 4 langkah mudah: pilih produk, keranjang, checkout, konfirmasi WhatsApp.{% endblock %}
+
+{% block content %}
+<div class="store-wrap info-page">
+  <nav class="crumbs"><a href="{{ url_for('store.index') }}">Beranda</a> › <span>Cara Order</span></nav>
+  <header class="info-hero">
+    <span class="hero-eyebrow" style="color:var(--primary-strong);background:var(--primary-soft)">✦ Panduan</span>
+    <h1>Cara Order</h1>
+    <p class="lead">Belanja gampang, cuma 4 langkah.</p>
+  </header>
+
+  <div class="steps">
+    <div class="step"><span class="step-no">1</span><div><h4>Pilih produk</h4><p class="text-muted">Jelajahi katalog, buka produk yang kamu suka, cek ukuran & kondisinya.</p></div></div>
+    <div class="step"><span class="step-no">2</span><div><h4>Masukkan keranjang</h4><p class="text-muted">Klik <strong>+ Keranjang</strong>. Bisa tambah beberapa produk sekaligus.</p></div></div>
+    <div class="step"><span class="step-no">3</span><div><h4>Checkout</h4><p class="text-muted">Buka keranjang → <strong>Checkout</strong> → isi nama, WhatsApp, dan alamat.</p></div></div>
+    <div class="step"><span class="step-no">4</span><div><h4>Konfirmasi via WhatsApp</h4><p class="text-muted">Klik tombol konfirmasi — pesananmu otomatis terkirim ke admin untuk diproses & pembayaran.</p></div></div>
+  </div>
+
+  <div class="flex gap-8" style="margin-top:24px;flex-wrap:wrap">
+    <a class="btn btn-primary btn-lg" href="{{ url_for('store.index') }}">Mulai Belanja</a>
+    {% if setting.whatsapp_number %}<a class="btn btn-ghost btn-lg" href="https://wa.me/{{ setting.whatsapp_number }}" target="_blank">Tanya Admin</a>{% endif %}
+  </div>
+</div>
+{% endblock %}
