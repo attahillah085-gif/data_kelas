@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import secrets
 from datetime import datetime, timedelta
 
 from flask import current_app
@@ -11,11 +12,15 @@ from .models import (
     ContentSchedule,
     Investment,
     Notification,
+    Order,
     Period,
     PushSubscription,
     Setting,
+    Transaction,
     User,
     CONTENT_PLANNED,
+    INCOME,
+    ORDER_COUNTED,
     ROLE_MANAGER,
     ROLE_OWNER,
 )
@@ -176,3 +181,82 @@ def generate_content_reminders(window_hours: int = 24):
     if count:
         db.session.commit()
     return count
+
+
+# --------------------------------------------------------------------------
+#  Marketplace / pesanan
+# --------------------------------------------------------------------------
+def generate_order_code() -> str:
+    """Kode pesanan unik singkat, mis. TGH-7F3K9Q."""
+    for _ in range(10):
+        code = "TGH-" + secrets.token_hex(3).upper()
+        if not Order.query.filter_by(code=code).first():
+            return code
+    return "TGH-" + secrets.token_hex(5).upper()
+
+
+def _open_period() -> Period | None:
+    return Period.query.filter_by(status="OPEN").order_by(Period.start_date.desc()).first()
+
+
+def apply_order_effects(order: Order) -> str | None:
+    """Sinkronkan efek pesanan ke stok & keuangan berdasarkan statusnya.
+
+    - Status dihitung (PAID/SHIPPED/DONE) -> kurangi stok (sekali) & catat
+      pemasukan di periode berjalan (sekali).
+    - Status tidak dihitung (PENDING/CONFIRMED/CANCELED) -> kembalikan stok &
+      hapus pemasukan terkait bila sebelumnya sudah diterapkan.
+
+    Mengembalikan pesan peringatan (mis. tidak ada periode terbuka) atau None.
+    """
+    from .models import Product  # lokal untuk hindari import melingkar
+
+    warning = None
+    counted = order.status in ORDER_COUNTED
+
+    if counted and not order.stock_applied:
+        # Kurangi stok produk
+        for item in order.items:
+            if item.product_id:
+                prod = db.session.get(Product, item.product_id)
+                if prod:
+                    prod.stock = max((prod.stock or 0) - item.qty, 0)
+        order.stock_applied = True
+        if order.paid_at is None:
+            order.paid_at = datetime.utcnow()
+        # Catat pemasukan sekali (bila belum ada transaksi terkait)
+        if not order.transactions:
+            period = _open_period()
+            if period:
+                db.session.add(Transaction(
+                    period_id=period.id, kind=INCOME, category="Penjualan",
+                    amount=order.total, description=f"Pesanan toko {order.code}",
+                    date=datetime.utcnow().date(), order_id=order.id,
+                ))
+                order.period_id = period.id
+            else:
+                warning = ("Belum ada periode keuangan terbuka — stok sudah dikurangi, "
+                           "tapi pemasukan belum tercatat. Buat periode lalu ubah status ulang.")
+
+    elif not counted and order.stock_applied:
+        # Kembalikan stok
+        for item in order.items:
+            if item.product_id:
+                prod = db.session.get(Product, item.product_id)
+                if prod:
+                    prod.stock = (prod.stock or 0) + item.qty
+        order.stock_applied = False
+        order.paid_at = None
+        # Hapus pemasukan terkait
+        for tx in list(order.transactions):
+            db.session.delete(tx)
+        order.period_id = None
+
+    return warning
+
+
+def whatsapp_link(number: str, message: str) -> str:
+    """Bangun URL wa.me dengan pesan ter-encode."""
+    from urllib.parse import quote
+    num = "".join(ch for ch in (number or "") if ch.isdigit())
+    return f"https://wa.me/{num}?text={quote(message)}"

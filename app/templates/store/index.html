@@ -1,0 +1,67 @@
+{% extends "store/store_base.html" %}
+{% block title %}{{ setting.business_name }} — {{ setting.tagline }}{% endblock %}
+
+{% block content %}
+{% if not q and not category %}
+<section class="hero" {% if setting.hero_image %}style="--hero-img:url('{{ setting.hero_image }}')"{% endif %}>
+  <div class="store-wrap hero-inner">
+    <div class="hero-text">
+      <span class="hero-eyebrow">✦ {{ setting.tagline }}</span>
+      <h1>{{ setting.hero_headline }}</h1>
+      <p>{{ setting.hero_subtext }}</p>
+      <a href="#produk" class="btn btn-primary btn-lg">Belanja Sekarang</a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<div class="store-wrap">
+
+  {% if categories %}
+  <div class="cat-chips">
+    <a href="{{ url_for('store.index') }}" class="chip {{ 'active' if not category }}">Semua</a>
+    {% for c in categories %}
+    <a href="{{ url_for('store.index', kategori=c) }}" class="chip {{ 'active' if category==c }}">{{ c }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if featured %}
+  <section class="section">
+    <div class="section-head"><h2>⭐ Produk Unggulan</h2></div>
+    <div class="pgrid">
+      {% for p in featured %}{% include "store/_card.html" %}{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="section" id="produk">
+    <div class="section-head">
+      <h2>{{ ('Hasil pencarian "' + q + '"') if q else (category if category else 'Semua Produk') }}</h2>
+      <div class="spacer"></div>
+      <form method="get" class="sort-form">
+        {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+        {% if category %}<input type="hidden" name="kategori" value="{{ category }}">{% endif %}
+        <select name="urut" onchange="this.form.submit()">
+          <option value="">Terbaru</option>
+          <option value="murah" {{ 'selected' if sort=='murah' }}>Harga termurah</option>
+          <option value="mahal" {{ 'selected' if sort=='mahal' }}>Harga termahal</option>
+        </select>
+      </form>
+    </div>
+
+    {% if products %}
+    <div class="pgrid">
+      {% for p in products %}{% include "store/_card.html" %}{% endfor %}
+    </div>
+    {% else %}
+    <div class="empty" style="padding:60px 20px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <h4>Produk tidak ditemukan</h4>
+      <p>Coba kata kunci atau kategori lain.</p>
+      <a class="btn btn-ghost" href="{{ url_for('store.index') }}">Lihat semua produk</a>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

@@ -146,6 +146,18 @@ class Setting(db.Model):
     currency_symbol = db.Column(db.String(8), default="Rp")
     # Porsi laba yang ditahan bisnis/owner sebelum sisanya dibagi ke investor (%)
     owner_share_percent = db.Column(db.Integer, default=30)
+
+    # --- Storefront / marketplace ---
+    store_active = db.Column(db.Boolean, default=True)
+    whatsapp_number = db.Column(db.String(30), default="")  # format 62812xxxx
+    shop_description = db.Column(db.Text, default="Thrift & distro pilihan — kualitas oke, harga bersahabat.")
+    hero_headline = db.Column(db.String(160), default="Gaya Keren, Harga Bersahabat")
+    hero_subtext = db.Column(db.String(240), default="Koleksi thrift & distro pilihan yang di-kurasi khusus buat kamu.")
+    hero_image = db.Column(db.String(400), default="")
+    instagram = db.Column(db.String(120), default="")
+    tiktok = db.Column(db.String(120), default="")
+    shipping_fee = db.Column(db.Integer, default=0)
+
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     @staticmethod
@@ -207,6 +219,7 @@ class Transaction(db.Model):
     description = db.Column(db.String(255), default="")
     date = db.Column(db.Date, nullable=False, default=date.today)
     batch_id = db.Column(db.Integer, db.ForeignKey("inventory_batches.id"), nullable=True)
+    order_id = db.Column(db.Integer, db.ForeignKey("orders.id"), nullable=True)
     created_by_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -321,3 +334,116 @@ class PushSubscription(db.Model):
     endpoint = db.Column(db.String(500), unique=True, nullable=False)
     subscription_json = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+# ==========================================================================
+#  Marketplace / Storefront
+# ==========================================================================
+PRODUCT_CATEGORIES = [
+    "Kaos", "Kemeja", "Jaket / Hoodie", "Celana", "Dress", "Sweater",
+    "Jersey", "Flannel", "Crewneck", "Sepatu", "Tas", "Aksesoris", "Lainnya",
+]
+
+# Status pesanan
+ORDER_PENDING = "PENDING"       # baru masuk, belum dikonfirmasi
+ORDER_CONFIRMED = "CONFIRMED"   # dikonfirmasi admin, menunggu bayar
+ORDER_PAID = "PAID"             # sudah dibayar (dihitung sebagai penjualan)
+ORDER_SHIPPED = "SHIPPED"       # dikirim
+ORDER_DONE = "DONE"             # selesai
+ORDER_CANCELED = "CANCELED"     # dibatalkan
+ORDER_STATUSES = [ORDER_PENDING, ORDER_CONFIRMED, ORDER_PAID, ORDER_SHIPPED, ORDER_DONE, ORDER_CANCELED]
+ORDER_STATUS_LABELS = {
+    ORDER_PENDING: "Menunggu Konfirmasi",
+    ORDER_CONFIRMED: "Dikonfirmasi",
+    ORDER_PAID: "Sudah Dibayar",
+    ORDER_SHIPPED: "Dikirim",
+    ORDER_DONE: "Selesai",
+    ORDER_CANCELED: "Dibatalkan",
+}
+# Status yang dihitung sebagai penjualan (kurangi stok + catat pemasukan)
+ORDER_COUNTED = {ORDER_PAID, ORDER_SHIPPED, ORDER_DONE}
+
+
+class Product(db.Model):
+    __tablename__ = "products"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(160), nullable=False)
+    slug = db.Column(db.String(180), unique=True, index=True)
+    description = db.Column(db.Text, default="")
+    price = db.Column(db.Integer, default=0)
+    compare_price = db.Column(db.Integer, default=0)   # harga coret (opsional)
+    category = db.Column(db.String(80), default="Lainnya")
+    size = db.Column(db.String(60), default="")         # mis. "M" atau "S,M,L"
+    condition = db.Column(db.String(40), default="")    # mis. "Baru", "Second - Mulus"
+    stock = db.Column(db.Integer, default=0)
+    image = db.Column(db.String(500), default="")       # URL penuh atau /static/uploads/..
+    image2 = db.Column(db.String(500), default="")
+    active = db.Column(db.Boolean, default=True, index=True)
+    featured = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @property
+    def in_stock(self) -> bool:
+        return self.stock > 0
+
+    @property
+    def discount_percent(self) -> int:
+        if self.compare_price and self.compare_price > self.price and self.price > 0:
+            return round((self.compare_price - self.price) / self.compare_price * 100)
+        return 0
+
+    @property
+    def image_or_placeholder(self) -> str:
+        return self.image or ""
+
+
+class Order(db.Model):
+    __tablename__ = "orders"
+
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(20), unique=True, index=True)
+    customer_name = db.Column(db.String(120), nullable=False)
+    customer_phone = db.Column(db.String(30), nullable=False)
+    customer_address = db.Column(db.Text, default="")
+    note = db.Column(db.Text, default="")
+    status = db.Column(db.String(12), default=ORDER_PENDING, index=True)
+    subtotal = db.Column(db.Integer, default=0)
+    shipping = db.Column(db.Integer, default=0)
+    total = db.Column(db.Integer, default=0)
+    stock_applied = db.Column(db.Boolean, default=False)
+    period_id = db.Column(db.Integer, db.ForeignKey("periods.id"), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    paid_at = db.Column(db.DateTime, nullable=True)
+
+    items = db.relationship("OrderItem", backref="order", cascade="all, delete-orphan")
+    transactions = db.relationship("Transaction", backref="order")
+
+    @property
+    def status_label(self) -> str:
+        return ORDER_STATUS_LABELS.get(self.status, self.status)
+
+    @property
+    def total_qty(self) -> int:
+        return sum(i.qty for i in self.items)
+
+    @property
+    def is_counted(self) -> bool:
+        return self.status in ORDER_COUNTED
+
+
+class OrderItem(db.Model):
+    __tablename__ = "order_items"
+
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey("orders.id"), nullable=False, index=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=True)
+    product_name = db.Column(db.String(160), nullable=False)
+    price = db.Column(db.Integer, default=0)
+    qty = db.Column(db.Integer, default=1)
+
+    product = db.relationship("Product")
+
+    @property
+    def line_total(self) -> int:
+        return self.price * self.qty

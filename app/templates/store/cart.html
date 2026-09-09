@@ -1,0 +1,33 @@
+{% extends "store/store_base.html" %}
+{% block title %}Keranjang — {{ setting.business_name }}{% endblock %}
+
+{% block content %}
+<div class="store-wrap">
+  <div class="section-head"><h2>Keranjang Belanja</h2></div>
+
+  <div class="cart-layout" id="cartLayout" hidden>
+    <div class="cart-items" id="cartItems"></div>
+    <aside class="cart-summary">
+      <h3>Ringkasan</h3>
+      <div class="row-between"><span class="text-muted">Subtotal</span><span class="fw-700" id="cartSubtotal">Rp 0</span></div>
+      {% if setting.shipping_fee %}
+      <div class="row-between"><span class="text-muted">Ongkir</span><span class="fw-700">{{ setting.shipping_fee|rupiah }}</span></div>
+      {% endif %}
+      <div class="row-between cart-total"><span>Total</span><span id="cartTotal">Rp 0</span></div>
+      <a href="{{ url_for('store.checkout') }}" class="btn btn-primary btn-block btn-lg mt-16">Lanjut Checkout</a>
+      <a href="{{ url_for('store.index') }}" class="btn btn-ghost btn-block mt-8">Lanjut Belanja</a>
+    </aside>
+  </div>
+
+  <div class="empty" id="cartEmpty" style="padding:60px 20px" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+    <h4>Keranjang masih kosong</h4>
+    <p>Yuk cari barang keren dulu!</p>
+    <a class="btn btn-primary" href="{{ url_for('store.index') }}">Mulai Belanja</a>
+  </div>
+</div>
+
+<script>
+  window.STORE_SHIPPING = {{ setting.shipping_fee or 0 }};
+</script>
+{% endblock %}

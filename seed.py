@@ -15,7 +15,10 @@ from app.models import (
     ContentSchedule,
     InventoryBatch,
     Investment,
+    Order,
+    OrderItem,
     Period,
+    Product,
     Setting,
     Transaction,
     User,
@@ -25,6 +28,7 @@ from app.models import (
     ROLE_MANAGER,
     ROLE_OWNER,
 )
+from app.utils import slugify
 
 
 def generate_vapid():
@@ -138,8 +142,41 @@ def seed_demo(app):
         ]
         db.session.add_all(contents)
 
+        # --- Pengaturan toko online ---
+        s = Setting.get()
+        s.whatsapp_number = s.whatsapp_number or "6281234567890"
+        s.shop_description = "Thrift & distro pilihan — kualitas oke, harga bersahabat. Update stok tiap minggu!"
+        s.instagram = s.instagram or "thegirlhouse"
+
+        # --- Produk demo ---
+        demo = [
+            ("Kaos Vintage Band Hitam", "Kaos", "M", 55000, 85000, 12, "kaos.png",
+             "Kaos vintage motif band, bahan katun adem, jahitan rapi. Cocok buat harian."),
+            ("Hoodie Oversized Abu", "Jaket / Hoodie", "L", 120000, 160000, 6, "hoodie.png",
+             "Hoodie oversized bahan fleece tebal, hangat & nyaman. Unisex."),
+            ("Jaket Denim Klasik", "Jaket / Hoodie", "M", 145000, 0, 4, "jaket.png",
+             "Jaket denim second import, kondisi mulus, warna biru klasik."),
+            ("Kemeja Flanel Kotak", "Flannel", "L", 75000, 95000, 9, "flannel.png",
+             "Kemeja flanel motif kotak, bahan halus, cocok buat gaya kasual."),
+            ("Celana Cargo Army", "Celana", "32", 98000, 0, 7, "celana.png",
+             "Celana cargo warna army, banyak kantong, bahan kuat."),
+            ("Sweater Rajut Cream", "Sweater", "All size", 89000, 110000, 5, "sweater.png",
+             "Sweater rajut warna cream, lembut & anti gerah. Aesthetic banget."),
+            ("Dress Floral Retro", "Dress", "M", 115000, 0, 3, "dress.png",
+             "Dress motif floral retro, bahan adem, cocok buat hangout."),
+            ("Kemeja Polos Putih", "Kemeja", "M", 65000, 0, 0, "kemeja.png",
+             "Kemeja polos putih basic, wajib punya. (Contoh stok habis)"),
+        ]
+        for i, (name, cat, size, price, cmp, stock, img, desc) in enumerate(demo):
+            db.session.add(Product(
+                name=name, slug=slugify(name), category=cat, size=size, price=price,
+                compare_price=cmp, stock=stock, image=f"/static/demo/{img}",
+                description=desc, active=True, featured=(i < 3),
+                condition="Second - Mulus" if "second" in desc.lower() else "Baru",
+            ))
+
         db.session.commit()
-        print("  ✓ Data demo dibuat (tim, periode, stok, transaksi, konten).")
+        print("  ✓ Data demo dibuat (tim, periode, stok, transaksi, konten, produk toko).")
         print("     Pengelola : pengelola@thriftflow.id / manager123")
         print("     Investor  : andi@thriftflow.id / invest123")
 

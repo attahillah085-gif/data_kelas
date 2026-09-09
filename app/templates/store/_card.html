@@ -1,0 +1,26 @@
+<article class="pcard">
+  <a class="pcard-img" href="{{ url_for('store.product', slug=p.slug) }}">
+    {% if p.image %}
+      <img src="{{ p.image }}" alt="{{ p.name }}" loading="lazy">
+    {% else %}
+      <div class="pcard-noimg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M20 7h-3.5l-1-2h-7l-1 2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z"/><circle cx="12" cy="13" r="3.5"/></svg></div>
+    {% endif %}
+    {% if p.discount_percent %}<span class="pcard-badge sale">-{{ p.discount_percent }}%</span>{% endif %}
+    {% if not p.in_stock %}<span class="pcard-badge out">Habis</span>{% endif %}
+  </a>
+  <div class="pcard-body">
+    <div class="pcard-cat">{{ p.category }}{% if p.size %} · {{ p.size }}{% endif %}</div>
+    <a class="pcard-name" href="{{ url_for('store.product', slug=p.slug) }}">{{ p.name }}</a>
+    <div class="pcard-price">
+      <span class="now">{{ p.price|rupiah }}</span>
+      {% if p.compare_price and p.compare_price > p.price %}<span class="was">{{ p.compare_price|rupiah }}</span>{% endif %}
+    </div>
+    <button class="btn btn-primary btn-block add-cart" {{ 'disabled' if not p.in_stock }}
+      data-id="{{ p.id }}" data-name="{{ p.name }}" data-price="{{ p.price }}"
+      data-image="{{ p.image }}" data-slug="{{ p.slug }}">
+      {% if p.in_stock %}
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> Keranjang
+      {% else %}Stok Habis{% endif %}
+    </button>
+  </div>
+</article>

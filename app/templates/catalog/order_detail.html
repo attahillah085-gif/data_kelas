@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Pesanan {{ o.code }} — {{ setting.business_name }}{% endblock %}
+{% block page_title %}Pesanan {{ o.code }}{% endblock %}
+{% block page_subtitle %}Detail & status pesanan.{% endblock %}
+
+{% set scolor = {'PENDING':'b-amber','CONFIRMED':'b-blue','PAID':'b-green','SHIPPED':'b-purple','DONE':'b-green','CANCELED':'b-red'} %}
+
+{% block topbar_actions %}
+  <a class="btn btn-ghost btn-sm" href="{{ url_for('catalog.orders') }}">← Semua pesanan</a>
+{% endblock %}
+
+{% block content %}
+<div class="grid cols-main">
+  <div class="card">
+    <div class="card-head"><h3>Item Pesanan</h3><div class="spacer"></div><span class="badge {{ scolor[o.status] }}">{{ o.status_label }}</span></div>
+    <div class="table-wrap">
+      <table class="tbl">
+        <thead><tr><th>Produk</th><th class="num">Harga</th><th class="num">Qty</th><th class="num">Subtotal</th></tr></thead>
+        <tbody>
+          {% for it in o.items %}
+          <tr><td class="fw-700">{{ it.product_name }}</td><td class="num">{{ it.price|rupiah }}</td><td class="num">{{ it.qty }}</td><td class="num fw-700">{{ it.line_total|rupiah }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="card-body">
+      <div class="row-between"><span class="text-muted">Subtotal</span><span class="fw-700">{{ o.subtotal|rupiah }}</span></div>
+      {% if o.shipping %}<div class="row-between"><span class="text-muted">Ongkir</span><span class="fw-700">{{ o.shipping|rupiah }}</span></div>{% endif %}
+      <div class="row-between cart-total" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px;font-weight:800;font-size:1.1rem"><span>Total</span><span style="color:var(--primary-strong)">{{ o.total|rupiah }}</span></div>
+    </div>
+  </div>
+
+  <div class="stack">
+    <div class="card card-pad">
+      <h3 style="font-size:1rem" class="mb-16">Ubah Status</h3>
+      <form method="post" action="{{ url_for('catalog.order_status', oid=o.id) }}">
+        <div class="field"><select name="status">
+          {% for s in statuses %}<option value="{{ s }}" {{ 'selected' if o.status==s }}>{{ status_labels[s] }}</option>{% endfor %}
+        </select></div>
+        <button class="btn btn-primary btn-block" type="submit">Simpan Status</button>
+      </form>
+      <p class="text-soft mt-8" style="font-size:.78rem">Status <strong>Dibayar/Dikirim/Selesai</strong> otomatis mengurangi stok & mencatat pemasukan di periode berjalan.</p>
+      {% if o.stock_applied %}<div class="badge b-green mt-8"><span class="dot-mini"></span>Sudah dicatat ke keuangan & stok</div>{% endif %}
+    </div>
+
+    <div class="card card-pad">
+      <h3 style="font-size:1rem" class="mb-16">Pelanggan</h3>
+      <div class="list-row" style="padding:6px 0"><div class="grow"><div class="s">Nama</div><div class="t">{{ o.customer_name }}</div></div></div>
+      <div class="list-row" style="padding:6px 0"><div class="grow"><div class="s">WhatsApp</div><div class="t">{{ o.customer_phone }}</div></div></div>
+      {% if o.customer_address %}<div class="list-row" style="padding:6px 0"><div class="grow"><div class="s">Alamat</div><div class="t" style="white-space:normal;font-weight:500">{{ o.customer_address }}</div></div></div>{% endif %}
+      {% if o.note %}<div class="muted-box mt-8" style="font-size:.84rem"><strong>Catatan:</strong> {{ o.note }}</div>{% endif %}
+      {% set wa_num = o.customer_phone|replace('+','')|replace(' ','')|replace('-','') %}
+      {% set wa_num = ('62' + wa_num[1:]) if wa_num.startswith('0') else wa_num %}
+      <a class="btn btn-success btn-block mt-16" href="https://wa.me/{{ wa_num }}" target="_blank">Chat Pelanggan</a>
+    </div>
+
+    <form method="post" action="{{ url_for('catalog.order_delete', oid=o.id) }}" onsubmit="return confirm('Hapus pesanan {{ o.code }}? Efek stok & keuangan akan dikembalikan.')">
+      <button class="btn btn-danger-soft btn-block" type="submit">Hapus Pesanan</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

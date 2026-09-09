@@ -62,6 +62,23 @@
       Investor & Bagi Hasil
     </a>
 
+    {% if current_user.is_authenticated and current_user.can_manage %}
+    <div class="nav-section">Toko Online</div>
+    <a class="nav-item {{ 'active' if request.endpoint=='catalog.products' }}" href="{{ url_for('catalog.products') }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      Produk
+    </a>
+    <a class="nav-item {{ 'active' if request.endpoint in ['catalog.orders','catalog.order_detail'] }}" href="{{ url_for('catalog.orders') }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      Pesanan
+      {% if pending_orders %}<span class="nav-badge">{{ pending_orders }}</span>{% endif %}
+    </a>
+    <a class="nav-item" href="{{ url_for('store.index') }}" target="_blank">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>
+      Lihat Toko
+    </a>
+    {% endif %}
+
     {% if current_user.is_authenticated and current_user.is_owner %}
     <div class="nav-section">Kelola</div>
     <a class="nav-item {{ 'active' if request.endpoint=='main.users' }}" href="{{ url_for('main.users') }}">

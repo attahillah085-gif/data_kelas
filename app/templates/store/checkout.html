@@ -1,0 +1,31 @@
+{% extends "store/store_base.html" %}
+{% block title %}Checkout — {{ setting.business_name }}{% endblock %}
+
+{% block content %}
+<div class="store-wrap">
+  <div class="section-head"><h2>Checkout</h2></div>
+
+  <form method="post" action="{{ url_for('store.checkout') }}" id="checkoutForm" class="cart-layout">
+    <div class="card card-pad">
+      <h3 class="mb-16">Data Pengiriman</h3>
+      <div class="field"><label>Nama lengkap</label><input name="name" placeholder="Nama penerima" required></div>
+      <div class="field"><label>Nomor WhatsApp</label><input name="phone" inputmode="tel" placeholder="0812xxxxxxxx" required></div>
+      <div class="field"><label>Alamat lengkap</label><textarea name="address" placeholder="Jalan, RT/RW, kelurahan, kota, kode pos"></textarea></div>
+      <div class="field"><label>Catatan <span class="text-soft">(opsional)</span></label><input name="note" placeholder="mis. warna/ukuran, patokan alamat"></div>
+      <input type="hidden" name="items" id="itemsField" value="[]">
+    </div>
+
+    <aside class="cart-summary">
+      <h3>Pesananmu</h3>
+      <div id="coItems" class="co-items"></div>
+      <div class="row-between mt-8"><span class="text-muted">Subtotal</span><span class="fw-700" id="coSubtotal">Rp 0</span></div>
+      {% if setting.shipping_fee %}<div class="row-between"><span class="text-muted">Ongkir</span><span class="fw-700">{{ setting.shipping_fee|rupiah }}</span></div>{% endif %}
+      <div class="row-between cart-total"><span>Total</span><span id="coTotal">Rp 0</span></div>
+      <button type="submit" class="btn btn-primary btn-block btn-lg mt-16" id="coSubmit">Buat Pesanan</button>
+      <p class="text-soft mt-8" style="font-size:.78rem">Setelah pesanan dibuat, kamu bisa langsung konfirmasi via WhatsApp.</p>
+    </aside>
+  </form>
+</div>
+
+<script>window.STORE_SHIPPING = {{ setting.shipping_fee or 0 }};</script>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends "store/store_base.html" %}
+{% block title %}{{ p.name }} — {{ setting.business_name }}{% endblock %}
+
+{% block content %}
+<div class="store-wrap">
+  <nav class="crumbs">
+    <a href="{{ url_for('store.index') }}">Beranda</a> ›
+    <a href="{{ url_for('store.index', kategori=p.category) }}">{{ p.category }}</a> ›
+    <span>{{ p.name }}</span>
+  </nav>
+
+  <div class="pdetail">
+    <div class="pdetail-media">
+      <div class="pdetail-img">
+        {% if p.image %}<img src="{{ p.image }}" alt="{{ p.name }}">
+        {% else %}<div class="pcard-noimg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M20 7h-3.5l-1-2h-7l-1 2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z"/><circle cx="12" cy="13" r="3.5"/></svg></div>{% endif %}
+        {% if p.discount_percent %}<span class="pcard-badge sale">-{{ p.discount_percent }}%</span>{% endif %}
+      </div>
+      {% if p.image2 %}<div class="pdetail-thumb"><img src="{{ p.image2 }}" alt="{{ p.name }} 2"></div>{% endif %}
+    </div>
+
+    <div class="pdetail-info">
+      <div class="pcard-cat">{{ p.category }}</div>
+      <h1>{{ p.name }}</h1>
+      <div class="pdetail-price">
+        <span class="now">{{ p.price|rupiah }}</span>
+        {% if p.compare_price and p.compare_price > p.price %}<span class="was">{{ p.compare_price|rupiah }}</span>{% endif %}
+      </div>
+
+      <div class="pdetail-meta">
+        {% if p.size %}<span class="badge b-blue">Ukuran: {{ p.size }}</span>{% endif %}
+        {% if p.condition %}<span class="badge b-muted">{{ p.condition }}</span>{% endif %}
+        {% if p.in_stock %}<span class="badge b-green"><span class="dot-mini"></span>Stok {{ p.stock }}</span>
+        {% else %}<span class="badge b-red">Stok habis</span>{% endif %}
+      </div>
+
+      {% if p.description %}<div class="pdetail-desc">{{ p.description|replace('\n','<br>')|safe }}</div>{% endif %}
+
+      <div class="pdetail-actions">
+        <div class="qty-box">
+          <button type="button" class="qty-btn" data-qty="-">−</button>
+          <input type="number" id="qtyInput" value="1" min="1" max="{{ p.stock or 1 }}">
+          <button type="button" class="qty-btn" data-qty="+">+</button>
+        </div>
+        <button class="btn btn-primary btn-lg add-cart" {{ 'disabled' if not p.in_stock }}
+          data-id="{{ p.id }}" data-name="{{ p.name }}" data-price="{{ p.price }}"
+          data-image="{{ p.image }}" data-slug="{{ p.slug }}" data-qty-source="qtyInput">
+          {% if p.in_stock %}Tambah ke Keranjang{% else %}Stok Habis{% endif %}
+        </button>
+      </div>
+      <a class="btn btn-ghost btn-block mt-16" href="{{ url_for('store.cart') }}">Lihat Keranjang →</a>
+    </div>
+  </div>
+
+  {% if related %}
+  <section class="section">
+    <div class="section-head"><h2>Produk Serupa</h2></div>
+    <div class="pgrid">
+      {% for p in related %}{% include "store/_card.html" %}{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

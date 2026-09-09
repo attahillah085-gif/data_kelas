@@ -28,7 +28,7 @@ from .utils import owner_required
 bp = Blueprint("main", __name__)
 
 
-@bp.route("/")
+@bp.route("/dashboard")
 @login_required
 def dashboard():
     # Pengingat konten (best-effort, tidak menggagalkan halaman)
@@ -144,6 +144,19 @@ def settings():
         try:
             pct = int(request.form.get("owner_share_percent") or 0)
             s.owner_share_percent = min(max(pct, 0), 100)
+        except ValueError:
+            pass
+        # --- Toko online ---
+        s.store_active = bool(request.form.get("store_active"))
+        s.whatsapp_number = "".join(ch for ch in (request.form.get("whatsapp_number") or "") if ch.isdigit())
+        s.shop_description = (request.form.get("shop_description") or "").strip()
+        s.hero_headline = (request.form.get("hero_headline") or "").strip()
+        s.hero_subtext = (request.form.get("hero_subtext") or "").strip()
+        s.hero_image = (request.form.get("hero_image") or "").strip()
+        s.instagram = (request.form.get("instagram") or "").strip()
+        s.tiktok = (request.form.get("tiktok") or "").strip()
+        try:
+            s.shipping_fee = max(int(float(request.form.get("shipping_fee") or 0)), 0)
         except ValueError:
             pass
         db.session.commit()

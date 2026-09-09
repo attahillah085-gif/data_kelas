@@ -30,6 +30,8 @@ def create_app(config_object: type = Config) -> Flask:
     from .content import bp as content_bp
     from .investors import bp as investors_bp
     from .notifications import bp as notifications_bp
+    from .store import bp as store_bp
+    from .catalog import bp as catalog_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
@@ -38,6 +40,8 @@ def create_app(config_object: type = Config) -> Flask:
     app.register_blueprint(content_bp)
     app.register_blueprint(investors_bp)
     app.register_blueprint(notifications_bp)
+    app.register_blueprint(store_bp)
+    app.register_blueprint(catalog_bp)
 
     with app.app_context():
         db.create_all()
@@ -57,11 +61,12 @@ def create_app(config_object: type = Config) -> Flask:
 
 
 def _register_context(app: Flask) -> None:
-    from .models import Notification, Setting
+    from .models import Notification, Order, Setting, ORDER_PENDING
 
     @app.context_processor
     def inject_globals():
         unread = 0
+        pending_orders = 0
         recent_notifs = []
         setting = None
         try:
@@ -76,11 +81,14 @@ def _register_context(app: Flask) -> None:
                     .limit(8)
                     .all()
                 )
+                if current_user.can_manage:
+                    pending_orders = Order.query.filter_by(status=ORDER_PENDING).count()
         except Exception:
             pass
         return {
             "setting": setting,
             "unread_count": unread,
+            "pending_orders": pending_orders,
             "recent_notifs": recent_notifs,
             "now": datetime.utcnow(),
             "vapid_public_key": app.config.get("VAPID_PUBLIC_KEY", ""),

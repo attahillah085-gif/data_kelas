@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Pesanan — {{ setting.business_name }}{% endblock %}
+{% block page_title %}Pesanan{% endblock %}
+{% block page_subtitle %}Kelola pesanan masuk dari toko online.{% endblock %}
+
+{% set scolor = {'PENDING':'b-amber','CONFIRMED':'b-blue','PAID':'b-green','SHIPPED':'b-purple','DONE':'b-green','CANCELED':'b-red'} %}
+
+{% block content %}
+<div class="section-title">
+  <div class="pill-tabs">
+    <a href="{{ url_for('catalog.orders') }}" class="{{ 'active' if not status }}">Semua ({{ counts.all }})</a>
+    <a href="{{ url_for('catalog.orders', status='PENDING') }}" class="{{ 'active' if status=='PENDING' }}">Menunggu ({{ counts.pending }})</a>
+    <a href="{{ url_for('catalog.orders', status='PAID') }}" class="{{ 'active' if status=='PAID' }}">Dibayar</a>
+    <a href="{{ url_for('catalog.orders', status='DONE') }}" class="{{ 'active' if status=='DONE' }}">Selesai</a>
+  </div>
+</div>
+
+{% if not items %}
+<div class="card card-pad empty">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+  <h4>Belum ada pesanan</h4>
+  <p>Pesanan dari toko online akan muncul di sini.</p>
+</div>
+{% else %}
+<div class="card">
+  <div class="table-wrap">
+    <table class="tbl">
+      <thead><tr><th>Kode</th><th>Pelanggan</th><th class="num">Item</th><th class="num">Total</th><th>Status</th><th>Tanggal</th><th></th></tr></thead>
+      <tbody>
+        {% for o in items %}
+        <tr>
+          <td class="fw-800">{{ o.code }}</td>
+          <td>{{ o.customer_name }}<br><span class="text-soft" style="font-size:.78rem">{{ o.customer_phone }}</span></td>
+          <td class="num">{{ o.total_qty }}</td>
+          <td class="num fw-700">{{ o.total|rupiah }}</td>
+          <td><span class="badge {{ scolor[o.status] }}">{{ o.status_label }}</span></td>
+          <td class="text-muted" style="white-space:nowrap">{{ o.created_at.strftime('%d %b %H:%M') }}</td>
+          <td class="num"><a class="btn btn-ghost btn-xs" href="{{ url_for('catalog.order_detail', oid=o.id) }}">Detail</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

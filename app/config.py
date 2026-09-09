@@ -50,6 +50,9 @@ class Config:
     # Set COOKIE_SECURE=1 di produksi (HTTPS) agar cookie hanya lewat HTTPS.
     SESSION_COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "").lower() in ("1", "true", "yes")
 
+    # Batas ukuran upload (gambar produk) — 6 MB
+    MAX_CONTENT_LENGTH = 6 * 1024 * 1024
+
     # Identitas bisnis default (bisa diubah di halaman Pengaturan)
     APP_NAME = "The Girl House"
 

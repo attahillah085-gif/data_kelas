@@ -23,3 +23,7 @@ Thumbs.db
 
 # Legacy database lama
 legacy/kas.db
+
+# Upload gambar produk (data pengguna, jangan commit)
+app/static/uploads/*
+!app/static/uploads/.gitkeep

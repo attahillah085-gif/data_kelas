@@ -20,6 +20,24 @@
           </div>
         </div>
       </div>
+
+      <div class="card-head" style="border-top:1px solid var(--border)"><h3>🛍️ Toko Online</h3></div>
+      <div class="card-body">
+        <label class="check mb-16"><input type="checkbox" name="store_active" {{ 'checked' if s.store_active }}> Aktifkan toko online</label>
+        <div class="form-row">
+          <div class="field"><label>Nomor WhatsApp</label><input name="whatsapp_number" value="{{ s.whatsapp_number }}" placeholder="628123456789"><span class="hint">Format 62… (untuk tombol checkout).</span></div>
+          <div class="field"><label>Ongkir flat <span class="text-soft">(opsional)</span></label><input type="number" name="shipping_fee" min="0" value="{{ s.shipping_fee }}"></div>
+        </div>
+        <div class="field"><label>Deskripsi toko</label><textarea name="shop_description" placeholder="Deskripsi singkat toko">{{ s.shop_description }}</textarea></div>
+        <div class="field"><label>Judul hero (banner)</label><input name="hero_headline" value="{{ s.hero_headline }}" placeholder="mis. Gaya Keren, Harga Bersahabat"></div>
+        <div class="field"><label>Subjudul hero</label><input name="hero_subtext" value="{{ s.hero_subtext }}"></div>
+        <div class="field"><label>URL gambar hero <span class="text-soft">(opsional)</span></label><input name="hero_image" value="{{ s.hero_image }}" placeholder="https://..."></div>
+        <div class="form-row">
+          <div class="field"><label>Instagram</label><input name="instagram" value="{{ s.instagram }}" placeholder="@username"></div>
+          <div class="field"><label>TikTok</label><input name="tiktok" value="{{ s.tiktok }}" placeholder="@username"></div>
+        </div>
+      </div>
+
       <div class="dialog-foot" style="border-top:1px solid var(--border)"><button class="btn btn-primary" type="submit">Simpan Pengaturan</button></div>
     </form>
   </div>
