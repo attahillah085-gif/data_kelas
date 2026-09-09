@@ -9,16 +9,16 @@ from PIL import Image, ImageDraw, ImageFont
 OUT = Path(__file__).resolve().parent.parent / "app" / "static" / "demo"
 OUT.mkdir(parents=True, exist_ok=True)
 
-# (nama file, warna1, warna2, label)
+# (nama file, warna1, warna2, label) — palet hangat sesuai brand The Girl House
 ITEMS = [
-    ("kaos.png", (59, 130, 246), (99, 102, 241), "KAOS"),
-    ("hoodie.png", (14, 165, 233), (37, 99, 235), "HOODIE"),
-    ("jaket.png", (99, 102, 241), (139, 92, 246), "JAKET"),
-    ("kemeja.png", (236, 72, 153), (99, 102, 241), "KEMEJA"),
-    ("celana.png", (16, 185, 129), (37, 99, 235), "CELANA"),
-    ("sweater.png", (245, 158, 11), (236, 72, 153), "SWEATER"),
-    ("dress.png", (168, 85, 247), (59, 130, 246), "DRESS"),
-    ("flannel.png", (239, 68, 68), (245, 158, 11), "FLANNEL"),
+    ("kaos.png", (124, 80, 56), (201, 139, 133), "KAOS"),
+    ("hoodie.png", (155, 106, 79), (216, 170, 150), "HOODIE"),
+    ("jaket.png", (110, 70, 52), (176, 125, 143), "JAKET"),
+    ("kemeja.png", (201, 139, 133), (176, 125, 143), "KEMEJA"),
+    ("celana.png", (139, 100, 70), (191, 138, 106), "CELANA"),
+    ("sweater.png", (191, 138, 106), (217, 166, 160), "SWEATER"),
+    ("dress.png", (176, 125, 143), (201, 139, 133), "DRESS"),
+    ("flannel.png", (150, 90, 70), (191, 138, 58), "FLANNEL"),
 ]
 
 SIZE = 800

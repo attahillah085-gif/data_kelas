@@ -66,20 +66,19 @@ def seed_demo(app):
             print("  (data demo sudah ada, dilewati)")
             return
 
-        # Tim
-        manager = User(name="Rara Pengelola", email="pengelola@thriftflow.id", role=ROLE_MANAGER, active=True)
-        manager.set_password("manager123")
-        andi = User(name="Andi Investor", email="andi@thriftflow.id", role=ROLE_INVESTOR, active=True)
-        andi.set_password("invest123")
-        sari = User(name="Sari Investor", email="sari@thriftflow.id", role=ROLE_INVESTOR, active=True)
-        sari.set_password("invest123")
-        db.session.add_all([manager, andi, sari])
+        # Tim — pengelola: Atahillah & Cendy, investor: Mifta
+        manager = User(name="Atahillah", email="atahillah@thegirlhouse.id", role=ROLE_MANAGER, active=True)
+        manager.set_password("atahillah123")
+        cendy = User(name="Cendy", email="cendy@thegirlhouse.id", role=ROLE_MANAGER, active=True)
+        cendy.set_password("cendy123")
+        mifta = User(name="Mifta", email="mifta@thegirlhouse.id", role=ROLE_INVESTOR, active=True)
+        mifta.set_password("mifta123")
+        db.session.add_all([manager, cendy, mifta])
         db.session.flush()
 
         # Modal investor
         db.session.add_all([
-            Investment(user_id=andi.id, amount=5_000_000, date=date.today() - timedelta(days=40), note="Modal awal"),
-            Investment(user_id=sari.id, amount=3_000_000, date=date.today() - timedelta(days=38), note="Modal awal"),
+            Investment(user_id=mifta.id, amount=8_000_000, date=date.today() - timedelta(days=40), note="Modal awal"),
         ])
 
         # Periode berjalan
@@ -104,7 +103,7 @@ def seed_demo(app):
         # Transaksi
         txs = [
             Transaction(period_id=p.id, kind=INCOME, category="Setoran Modal", amount=3_000_000,
-                        description="Modal tambahan Sari", date=date.today() - timedelta(days=8)),
+                        description="Modal tambahan Mifta", date=date.today() - timedelta(days=8)),
             Transaction(period_id=p.id, kind=EXPENSE, category="Kulakan / Beli Stok", amount=1_800_000,
                         description="Beli stok: Bal Kaos Bandung #1", date=date.today() - timedelta(days=20),
                         batch_id=b1.id),
@@ -177,8 +176,9 @@ def seed_demo(app):
 
         db.session.commit()
         print("  ✓ Data demo dibuat (tim, periode, stok, transaksi, konten, produk toko).")
-        print("     Pengelola : pengelola@thriftflow.id / manager123")
-        print("     Investor  : andi@thriftflow.id / invest123")
+        print("     Pengelola : atahillah@thegirlhouse.id / atahillah123")
+        print("     Pengelola : cendy@thegirlhouse.id / cendy123")
+        print("     Investor  : mifta@thegirlhouse.id / mifta123")
 
 
 def reset(app):

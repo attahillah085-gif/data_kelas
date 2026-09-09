@@ -61,7 +61,15 @@ def create_app(config_object: type = Config) -> Flask:
 
 
 def _register_context(app: Flask) -> None:
+    import os
+    from flask import url_for
     from .models import Notification, Order, Setting, ORDER_PENDING
+
+    def _detect_logo():
+        for name in ("logo.png", "logo.jpg", "logo.jpeg", "logo.webp", "logo.svg"):
+            if os.path.exists(os.path.join(app.static_folder, "brand", name)):
+                return url_for("static", filename=f"brand/{name}")
+        return None
 
     @app.context_processor
     def inject_globals():
@@ -69,6 +77,7 @@ def _register_context(app: Flask) -> None:
         pending_orders = 0
         recent_notifs = []
         setting = None
+        brand_logo = _detect_logo()
         try:
             setting = Setting.get()
             if current_user.is_authenticated:
@@ -90,6 +99,7 @@ def _register_context(app: Flask) -> None:
             "unread_count": unread,
             "pending_orders": pending_orders,
             "recent_notifs": recent_notifs,
+            "brand_logo": brand_logo,
             "now": datetime.utcnow(),
             "vapid_public_key": app.config.get("VAPID_PUBLIC_KEY", ""),
         }

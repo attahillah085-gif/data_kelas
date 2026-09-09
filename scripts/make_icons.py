@@ -53,7 +53,7 @@ def draw_bag(draw, size, pad, stroke_col, w):
 
 
 def make(size, radius_ratio=0.22, pad_ratio=0.26, maskable=False):
-    bg = gradient(size, (59, 130, 246), (99, 102, 241)).convert("RGBA")
+    bg = gradient(size, (124, 80, 56), (201, 139, 133)).convert("RGBA")
     if maskable:
         # latar penuh (tanpa sudut membulat) + area aman di tengah
         img = bg

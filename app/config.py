@@ -59,9 +59,9 @@ class Config:
     # Web Push (VAPID)
     VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
     VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
-    VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "mailto:admin@thriftflow.id")
+    VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "mailto:admin@thegirlhouse.id")
 
     # Akun owner awal (dipakai oleh seed.py)
     OWNER_NAME = os.environ.get("OWNER_NAME", "Pemilik")
-    OWNER_EMAIL = os.environ.get("OWNER_EMAIL", "owner@thriftflow.id")
+    OWNER_EMAIL = os.environ.get("OWNER_EMAIL", "owner@thegirlhouse.id")
     OWNER_PASSWORD = os.environ.get("OWNER_PASSWORD", "owner123")

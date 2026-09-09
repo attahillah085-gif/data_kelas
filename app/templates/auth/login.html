@@ -31,9 +31,13 @@
 
   <div class="auth-form">
     <div class="auth-card">
+      {% if brand_logo %}
+      <div style="text-align:center;margin-bottom:14px"><img src="{{ brand_logo }}" alt="{{ setting.business_name if setting else 'The Girl House' }}" style="height:96px;width:auto;max-width:220px;object-fit:contain"></div>
+      {% else %}
       <div class="auth-logo-sm brand" style="justify-content:center;margin-bottom:8px">
         <div class="brand-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-3.5l-1-2h-7l-1 2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z"/><circle cx="12" cy="13" r="3.5"/></svg></div>
       </div>
+      {% endif %}
       <h1>Selamat datang 👋</h1>
       <p class="text-muted mb-16">Masuk untuk melanjutkan ke dashboard.</p>
 
