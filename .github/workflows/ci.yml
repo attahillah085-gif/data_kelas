@@ -1,0 +1,29 @@
+name: Test The Girl House
+
+on:
+  push:
+    branches: ["claude/**", "main"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Boot check (aplikasi bisa dijalankan)
+        run: python -c "from app import create_app; create_app(); print('boot ok')"
+
+      - name: Smoke test (semua halaman & peran)
+        run: python tests/smoke.py
