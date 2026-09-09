@@ -8,6 +8,7 @@ from .extensions import db
 from .models import (
     Order,
     Product,
+    ProductVariant,
     PRODUCT_CATEGORIES,
     Review,
     ORDER_STATUSES,
@@ -71,6 +72,7 @@ def product_add():
         size=(request.form.get("size") or "").strip(),
         condition=(request.form.get("condition") or "").strip(),
         stock=_to_int(request.form.get("stock")),
+        sku=(request.form.get("sku") or "").strip(),
         image=_image_from_form("image"),
         image2=_image_from_form("image2"),
         active=bool(request.form.get("active")),
@@ -98,6 +100,7 @@ def product_edit(pid):
     p.size = (request.form.get("size") or "").strip()
     p.condition = (request.form.get("condition") or "").strip()
     p.stock = _to_int(request.form.get("stock"), p.stock)
+    p.sku = (request.form.get("sku") or "").strip()
     p.active = bool(request.form.get("active"))
     p.featured = bool(request.form.get("featured"))
     new_img = _image_from_form("image")
@@ -123,6 +126,57 @@ def product_delete(pid):
     db.session.delete(p)
     db.session.commit()
     flash(f"Produk '{name}' dihapus.", "info")
+    return redirect(url_for("catalog.products"))
+
+
+# ----------------------------------------------------------------- Varian
+@bp.route("/produk/<int:pid>/varian/tambah", methods=["POST"])
+@login_required
+@manage_required
+def variant_add(pid):
+    p = db.session.get(Product, pid)
+    if p is None:
+        flash("Produk tidak ditemukan.", "danger")
+        return redirect(url_for("catalog.products"))
+    label = (request.form.get("label") or "").strip()
+    if not label:
+        flash("Nama varian wajib diisi.", "danger")
+        return redirect(url_for("catalog.products"))
+    db.session.add(ProductVariant(
+        product_id=p.id, label=label,
+        sku=(request.form.get("sku") or "").strip(),
+        stock=_to_int(request.form.get("stock")),
+    ))
+    db.session.commit()
+    flash(f"Varian '{label}' ditambahkan ke {p.name}.", "success")
+    return redirect(url_for("catalog.products"))
+
+
+@bp.route("/varian/<int:vid>/ubah", methods=["POST"])
+@login_required
+@manage_required
+def variant_edit(vid):
+    v = db.session.get(ProductVariant, vid)
+    if v is None:
+        flash("Varian tidak ditemukan.", "danger")
+        return redirect(url_for("catalog.products"))
+    v.label = (request.form.get("label") or v.label).strip()
+    v.sku = (request.form.get("sku") or "").strip()
+    v.stock = _to_int(request.form.get("stock"), v.stock)
+    db.session.commit()
+    flash("Varian diperbarui.", "success")
+    return redirect(url_for("catalog.products"))
+
+
+@bp.route("/varian/<int:vid>/hapus", methods=["POST"])
+@login_required
+@manage_required
+def variant_delete(vid):
+    v = db.session.get(ProductVariant, vid)
+    if v:
+        db.session.delete(v)
+        db.session.commit()
+        flash("Varian dihapus.", "info")
     return redirect(url_for("catalog.products"))
 
 

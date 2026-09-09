@@ -186,6 +186,10 @@ def settings():
         s.promo_active = bool(request.form.get("promo_active"))
         s.promo_text = (request.form.get("promo_text") or "").strip()
         s.promo_link = (request.form.get("promo_link") or "").strip()
+        try:
+            s.low_stock_threshold = max(int(request.form.get("low_stock_threshold") or 0), 0)
+        except ValueError:
+            pass
         db.session.commit()
         flash("Pengaturan disimpan.", "success")
         return redirect(url_for("main.settings"))

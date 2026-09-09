@@ -18,7 +18,7 @@
         <thead><tr><th>Produk</th><th class="num">Harga</th><th class="num">Qty</th><th class="num">Subtotal</th></tr></thead>
         <tbody>
           {% for it in o.items %}
-          <tr><td class="fw-700">{{ it.product_name }}</td><td class="num">{{ it.price|rupiah }}</td><td class="num">{{ it.qty }}</td><td class="num fw-700">{{ it.line_total|rupiah }}</td></tr>
+          <tr><td class="fw-700">{{ it.display_name }}</td><td class="num">{{ it.price|rupiah }}</td><td class="num">{{ it.qty }}</td><td class="num fw-700">{{ it.line_total|rupiah }}</td></tr>
           {% endfor %}
         </tbody>
       </table>

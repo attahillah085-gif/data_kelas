@@ -64,16 +64,28 @@
       <div class="pdetail-meta">
         {% if p.size %}<span class="badge b-blue">Ukuran: {{ p.size }}</span>{% endif %}
         {% if p.condition %}<span class="badge b-muted">{{ p.condition }}</span>{% endif %}
-        {% if p.in_stock %}<span class="badge b-green"><span class="dot-mini"></span>Stok {{ p.stock }}</span>
+        {% if p.in_stock %}<span class="badge b-green"><span class="dot-mini"></span>Stok {{ p.total_stock }}</span>
         {% else %}<span class="badge b-red">Stok habis</span>{% endif %}
       </div>
 
       {% if p.description %}<div class="pdetail-desc">{{ p.description|replace('\n','<br>')|safe }}</div>{% endif %}
 
+      {% if p.has_variants %}
+      <div class="field" style="max-width:280px">
+        <label>Pilih varian</label>
+        <select id="variantSelect">
+          <option value="">— pilih —</option>
+          {% for v in p.variants %}
+          <option value="{{ v.id }}" data-stock="{{ v.stock }}" {{ 'disabled' if not v.in_stock }}>{{ v.label }}{{ '' if v.in_stock else ' (habis)' }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
+
       <div class="pdetail-actions">
         <div class="qty-box">
           <button type="button" class="qty-btn" data-qty="-">−</button>
-          <input type="number" id="qtyInput" value="1" min="1" max="{{ p.stock or 1 }}">
+          <input type="number" id="qtyInput" value="1" min="1" max="{{ p.total_stock or 1 }}">
           <button type="button" class="qty-btn" data-qty="+">+</button>
         </div>
         <button class="btn btn-primary btn-lg add-cart" {{ 'disabled' if not p.in_stock }}

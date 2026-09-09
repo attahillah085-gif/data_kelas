@@ -165,6 +165,9 @@ class Setting(db.Model):
     promo_text = db.Column(db.String(200), default="")
     promo_link = db.Column(db.String(255), default="")
 
+    # Ambang notifikasi stok menipis
+    low_stock_threshold = db.Column(db.Integer, default=3)
+
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     @staticmethod
@@ -384,6 +387,7 @@ class Product(db.Model):
     size = db.Column(db.String(60), default="")         # mis. "M" atau "S,M,L"
     condition = db.Column(db.String(40), default="")    # mis. "Baru", "Second - Mulus"
     stock = db.Column(db.Integer, default=0)
+    sku = db.Column(db.String(60), default="")
     image = db.Column(db.String(500), default="")       # URL penuh atau /static/uploads/..
     image2 = db.Column(db.String(500), default="")
     active = db.Column(db.Boolean, default=True, index=True)
@@ -391,10 +395,23 @@ class Product(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     reviews = db.relationship("Review", backref="product", cascade="all, delete-orphan")
+    variants = db.relationship("ProductVariant", backref="product",
+                               cascade="all, delete-orphan", order_by="ProductVariant.id")
+
+    @property
+    def has_variants(self) -> bool:
+        return len(self.variants) > 0
+
+    @property
+    def total_stock(self) -> int:
+        """Stok efektif: jumlah stok varian bila ada, jika tidak pakai stok produk."""
+        if self.has_variants:
+            return sum(v.stock for v in self.variants)
+        return self.stock
 
     @property
     def in_stock(self) -> bool:
-        return self.stock > 0
+        return self.total_stock > 0
 
     @property
     def discount_percent(self) -> int:
@@ -462,7 +479,9 @@ class OrderItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey("orders.id"), nullable=False, index=True)
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=True)
+    variant_id = db.Column(db.Integer, db.ForeignKey("product_variants.id"), nullable=True)
     product_name = db.Column(db.String(160), nullable=False)
+    variant_label = db.Column(db.String(80), default="")
     price = db.Column(db.Integer, default=0)
     qty = db.Column(db.Integer, default=1)
 
@@ -471,6 +490,25 @@ class OrderItem(db.Model):
     @property
     def line_total(self) -> int:
         return self.price * self.qty
+
+    @property
+    def display_name(self) -> str:
+        return f"{self.product_name} ({self.variant_label})" if self.variant_label else self.product_name
+
+
+class ProductVariant(db.Model):
+    __tablename__ = "product_variants"
+
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False, index=True)
+    label = db.Column(db.String(80), nullable=False)   # mis. "M" atau "Hitam / L"
+    sku = db.Column(db.String(60), default="")
+    stock = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @property
+    def in_stock(self) -> bool:
+        return self.stock > 0
 
 
 class Review(db.Model):

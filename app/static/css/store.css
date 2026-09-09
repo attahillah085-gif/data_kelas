@@ -116,6 +116,7 @@ body.store { background: var(--bg); }
 .cart-item .ci-noimg { width: 74px; height: 74px; border-radius: 10px; background: var(--surface-2); flex: none; display:grid; place-items:center; color: var(--text-soft); }
 .cart-item .ci-main { flex: 1; min-width: 0; }
 .cart-item .ci-name { font-weight: 650; font-size: .94rem; }
+.cart-item .ci-var { font-size: .76rem; color: var(--primary-strong); font-weight: 600; margin-top: 1px; }
 .cart-item .ci-price { color: var(--text-muted); font-size: .84rem; margin-top: 2px; }
 .cart-item .ci-remove { background: none; border: none; color: var(--text-soft); cursor: pointer; font-size: .8rem; padding: 2px 4px; }
 .cart-item .ci-remove:hover { color: var(--danger); }

@@ -26,6 +26,9 @@
       <span class="now">{{ p.price|rupiah }}</span>
       {% if p.compare_price and p.compare_price > p.price %}<span class="was">{{ p.compare_price|rupiah }}</span>{% endif %}
     </div>
+    {% if p.has_variants %}
+    <a class="btn btn-primary btn-block" href="{{ url_for('store.product', slug=p.slug) }}">{{ 'Pilih Opsi' if p.in_stock else 'Stok Habis' }}</a>
+    {% else %}
     <button class="btn btn-primary btn-block add-cart" {{ 'disabled' if not p.in_stock }}
       data-id="{{ p.id }}" data-name="{{ p.name }}" data-price="{{ p.price }}"
       data-image="{{ p.image }}" data-slug="{{ p.slug }}">
@@ -33,5 +36,6 @@
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> Keranjang
       {% else %}Stok Habis{% endif %}
     </button>
+    {% endif %}
   </div>
 </article>

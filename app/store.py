@@ -19,6 +19,7 @@ from .models import (
     Order,
     OrderItem,
     Product,
+    ProductVariant,
     PRODUCT_CATEGORIES,
     Review,
     Setting,
@@ -159,8 +160,25 @@ def checkout():
             prod = db.session.get(Product, pid)
             if prod is None or not prod.active:
                 continue
-            item = OrderItem(product_id=prod.id, product_name=prod.name,
-                             price=prod.price, qty=qty)
+            variant = None
+            vid = row.get("variantId")
+            if vid:
+                try:
+                    variant = db.session.get(ProductVariant, int(vid))
+                except (ValueError, TypeError):
+                    variant = None
+                if variant and variant.product_id != prod.id:
+                    variant = None
+            # Produk dgn varian wajib pilih varian
+            if prod.has_variants and variant is None:
+                continue
+            item = OrderItem(
+                product_id=prod.id,
+                variant_id=variant.id if variant else None,
+                product_name=prod.name,
+                variant_label=variant.label if variant else "",
+                price=prod.price, qty=qty,
+            )
             order.items.append(item)
             subtotal += prod.price * qty
 

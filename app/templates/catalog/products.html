@@ -24,10 +24,14 @@
       <div class="field"><label>Harga coret <span class="text-soft">(ops)</span></label><input type="number" name="compare_price" min="0" value="{{ p.compare_price if p and p.compare_price else '' }}"></div>
       <div class="field"><label>Stok</label><input type="number" name="stock" min="0" value="{{ p.stock if p else '' }}"></div>
     </div>
-    <div class="field"><label>Kondisi</label>
-      <input list="condList" name="condition" value="{{ p.condition if p }}" placeholder="mis. Second - Mulus">
-      <datalist id="condList">{% for c in cond_opts %}<option value="{{ c }}">{% endfor %}</datalist>
+    <div class="form-row">
+      <div class="field"><label>Kondisi</label>
+        <input list="condList" name="condition" value="{{ p.condition if p }}" placeholder="mis. Second - Mulus">
+        <datalist id="condList">{% for c in cond_opts %}<option value="{{ c }}">{% endfor %}</datalist>
+      </div>
+      <div class="field"><label>SKU <span class="text-soft">(opsional)</span></label><input name="sku" value="{{ p.sku if p }}" placeholder="mis. KVB-001"></div>
     </div>
+    {% if p and p.has_variants %}<div class="hint" style="color:var(--warning)">Produk ini punya varian — stok dihitung dari total varian. Kelola varian lewat tombol "Varian".</div>{% endif %}
     <div class="field"><label>Deskripsi</label><textarea name="description" placeholder="Detail bahan, ukuran, kondisi, dll.">{{ p.description if p }}</textarea></div>
     <div class="field"><label>Foto produk</label>
       <input type="file" name="image_file" accept="image/*">
@@ -84,11 +88,15 @@
           </td>
           <td class="text-muted">{{ p.category }}{% if p.size %}<br><span class="text-soft" style="font-size:.78rem">{{ p.size }}</span>{% endif %}</td>
           <td class="num fw-700">{{ p.price|rupiah }}{% if p.compare_price and p.compare_price>p.price %}<br><span class="text-soft" style="font-size:.76rem;text-decoration:line-through">{{ p.compare_price|rupiah }}</span>{% endif %}</td>
-          <td class="num">{% if p.stock>0 %}{{ p.stock }}{% else %}<span class="badge b-red">Habis</span>{% endif %}</td>
+          <td class="num">
+            {% if p.has_variants %}{{ p.total_stock }}<br><span class="text-soft" style="font-size:.72rem">{{ p.variants|length }} varian</span>
+            {% elif p.total_stock>0 %}{{ p.total_stock }}{% else %}<span class="badge b-red">Habis</span>{% endif %}
+          </td>
           <td>{% if p.active %}<span class="badge b-green"><span class="dot-mini"></span>Tampil</span>{% else %}<span class="badge b-muted">Sembunyi</span>{% endif %}</td>
           <td class="num">
             <div class="flex gap-6" style="justify-content:flex-end">
               <a class="icon-btn btn-sm" style="width:32px;height:32px" href="{{ url_for('store.product', slug=p.slug) }}" target="_blank" title="Lihat"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg></a>
+              <button class="icon-btn btn-sm" style="width:32px;height:32px" data-open-dialog="dlgVar{{ p.id }}" title="Varian & stok"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.6 13.4 12 22l-9-9V4h9l8.6 8.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg></button>
               <button class="icon-btn btn-sm" style="width:32px;height:32px" data-open-dialog="dlgEdit{{ p.id }}" title="Edit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
               <form method="post" action="{{ url_for('catalog.product_delete', pid=p.id) }}" onsubmit="return confirm('Hapus produk {{ p.name }}?')"><button class="icon-btn btn-sm" style="width:32px;height:32px" title="Hapus"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button></form>
             </div>
@@ -102,6 +110,32 @@
 
 {% for p in items %}
 <dialog id="dlgEdit{{ p.id }}">{{ product_form(url_for('catalog.product_edit', pid=p.id), p, 'dlgEdit' ~ p.id) }}</dialog>
+<dialog id="dlgVar{{ p.id }}">
+  <div class="dialog-head"><h3>Varian & Stok</h3><button type="button" class="icon-btn close-x" data-close-dialog="dlgVar{{ p.id }}">✕</button></div>
+  <div class="dialog-body">
+    <p class="text-soft" style="font-size:.82rem;margin-top:0">Kelola ukuran/warna dengan stok masing-masing untuk <strong>{{ p.name }}</strong>. Bila ada varian, stok produk mengikuti total varian.</p>
+    {% for v in p.variants %}
+    <form method="post" action="{{ url_for('catalog.variant_edit', vid=v.id) }}" class="flex gap-6" style="align-items:flex-end;margin-bottom:8px">
+      <div class="field" style="margin:0;flex:1"><label style="font-size:.7rem">Varian</label><input name="label" value="{{ v.label }}" required></div>
+      <div class="field" style="margin:0;flex:0 0 88px"><label style="font-size:.7rem">SKU</label><input name="sku" value="{{ v.sku }}"></div>
+      <div class="field" style="margin:0;flex:0 0 66px"><label style="font-size:.7rem">Stok</label><input type="number" name="stock" value="{{ v.stock }}" min="0"></div>
+      <button class="btn btn-ghost btn-sm" type="submit" title="Simpan">✓</button>
+      <button class="btn btn-danger-soft btn-sm" formaction="{{ url_for('catalog.variant_delete', vid=v.id) }}" formmethod="post" type="submit" title="Hapus" onclick="return confirm('Hapus varian ini?')">✕</button>
+    </form>
+    {% else %}
+    <div class="muted-box" style="font-size:.84rem">Belum ada varian. Produk memakai stok tunggal.</div>
+    {% endfor %}
+    <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:10px">
+      <form method="post" action="{{ url_for('catalog.variant_add', pid=p.id) }}" class="flex gap-6" style="align-items:flex-end">
+        <div class="field" style="margin:0;flex:1"><label style="font-size:.7rem">Varian baru</label><input name="label" placeholder="mis. M / Hitam" required></div>
+        <div class="field" style="margin:0;flex:0 0 88px"><label style="font-size:.7rem">SKU</label><input name="sku"></div>
+        <div class="field" style="margin:0;flex:0 0 66px"><label style="font-size:.7rem">Stok</label><input type="number" name="stock" value="0" min="0"></div>
+        <button class="btn btn-primary btn-sm" type="submit">+ Tambah</button>
+      </form>
+    </div>
+  </div>
+  <div class="dialog-foot"><button type="button" class="btn btn-ghost" data-close-dialog="dlgVar{{ p.id }}">Tutup</button></div>
+</dialog>
 {% endfor %}
 {% endif %}
 

@@ -69,19 +69,27 @@
     var qty = 1;
     var src = b.getAttribute("data-qty-source");
     if (src) { var qi = document.getElementById(src); if (qi) qty = Math.max(parseInt(qi.value || "1", 10), 1); }
+    var variantId = "", variantLabel = "";
+    var vs = document.getElementById("variantSelect");
+    if (vs) {
+      if (!vs.value) { toast("Pilih varian dulu ya"); return; }
+      variantId = vs.value;
+      variantLabel = (vs.options[vs.selectedIndex].textContent || "").replace(/\s*\(habis\)\s*$/, "").trim();
+    }
     addItem({
       id: parseInt(b.getAttribute("data-id"), 10),
       name: b.getAttribute("data-name"),
       price: parseInt(b.getAttribute("data-price"), 10),
       image: b.getAttribute("data-image") || "",
       slug: b.getAttribute("data-slug") || "",
-      qty: qty,
+      qty: qty, variantId: variantId, variant: variantLabel,
     });
     toast("Ditambahkan ke keranjang");
   });
+  function keyOf(x) { return x.id + "|" + (x.variantId || ""); }
   function addItem(item) {
     var c = getCart();
-    var f = c.find(function (x) { return x.id === item.id; });
+    var f = c.find(function (x) { return keyOf(x) === keyOf(item); });
     if (f) f.qty += item.qty; else c.push(item);
     setCart(c);
   }
@@ -106,6 +114,7 @@
       row.innerHTML =
         img +
         '<div class="ci-main"><div class="ci-name">' + it.name + '</div>' +
+        (it.variant ? '<div class="ci-var">' + it.variant + '</div>' : '') +
         '<div class="ci-price">' + rupiah(it.price) + '</div>' +
         '<button class="ci-remove" data-idx="' + idx + '">Hapus</button></div>' +
         '<div class="qty-box"><button type="button" class="qty-btn" data-qty="-">−</button>' +
@@ -141,13 +150,13 @@
     c.forEach(function (it) {
       subtotal += it.price * it.qty;
       var d = document.createElement("div"); d.className = "co-item";
-      d.innerHTML = '<span class="n">' + it.name + ' × ' + it.qty + '</span><span class="fw-700">' + rupiah(it.price * it.qty) + '</span>';
+      d.innerHTML = '<span class="n">' + it.name + (it.variant ? ' (' + it.variant + ')' : '') + ' × ' + it.qty + '</span><span class="fw-700">' + rupiah(it.price * it.qty) + '</span>';
       box.appendChild(d);
     });
     var shipping = window.STORE_SHIPPING || 0;
     document.getElementById("coSubtotal").textContent = rupiah(subtotal);
     document.getElementById("coTotal").textContent = rupiah(subtotal + shipping);
-    document.getElementById("itemsField").value = JSON.stringify(c.map(function (i) { return { id: i.id, qty: i.qty }; }));
+    document.getElementById("itemsField").value = JSON.stringify(c.map(function (i) { return { id: i.id, qty: i.qty, variantId: i.variantId || "" }; }));
   }
 
   /* ---------- Wishlist ---------- */

@@ -209,21 +209,39 @@ def apply_order_effects(order: Order) -> str | None:
 
     Mengembalikan pesan peringatan (mis. tidak ada periode terbuka) atau None.
     """
-    from .models import Product  # lokal untuk hindari import melingkar
+    from .models import Product, ProductVariant, Setting  # lokal: hindari import melingkar
 
     warning = None
     counted = order.status in ORDER_COUNTED
+    low_alerts = []  # (nama, sisa) untuk notifikasi stok menipis
 
     if counted and not order.stock_applied:
-        # Kurangi stok produk
+        # Kurangi stok (varian bila ada, jika tidak stok produk)
         for item in order.items:
-            if item.product_id:
+            if item.variant_id:
+                v = db.session.get(ProductVariant, item.variant_id)
+                if v:
+                    v.stock = max((v.stock or 0) - item.qty, 0)
+                    low_alerts.append((item.display_name, v.stock))
+            elif item.product_id:
                 prod = db.session.get(Product, item.product_id)
                 if prod:
                     prod.stock = max((prod.stock or 0) - item.qty, 0)
+                    low_alerts.append((item.product_name, prod.stock))
         order.stock_applied = True
         if order.paid_at is None:
             order.paid_at = datetime.utcnow()
+        # Notifikasi stok menipis
+        try:
+            threshold = Setting.get().low_stock_threshold or 0
+            for name, left in low_alerts:
+                if 0 <= left <= threshold:
+                    notify_managers(
+                        "Stok menipis" + (" — habis!" if left == 0 else ""),
+                        f"{name}: sisa {left}", category="warning", link="/kelola/produk",
+                    )
+        except Exception:
+            pass
         # Catat pemasukan sekali (bila belum ada transaksi terkait)
         if not order.transactions:
             period = _open_period()
@@ -241,7 +259,11 @@ def apply_order_effects(order: Order) -> str | None:
     elif not counted and order.stock_applied:
         # Kembalikan stok
         for item in order.items:
-            if item.product_id:
+            if item.variant_id:
+                v = db.session.get(ProductVariant, item.variant_id)
+                if v:
+                    v.stock = (v.stock or 0) + item.qty
+            elif item.product_id:
                 prod = db.session.get(Product, item.product_id)
                 if prod:
                     prod.stock = (prod.stock or 0) + item.qty

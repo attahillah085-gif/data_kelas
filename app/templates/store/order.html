@@ -17,7 +17,7 @@
     <div class="divide">
       {% for it in o.items %}
       <div class="list-row" style="padding:12px 0">
-        <div class="grow"><div class="t">{{ it.product_name }}</div><div class="s">{{ it.qty }} × {{ it.price|rupiah }}</div></div>
+        <div class="grow"><div class="t">{{ it.display_name }}</div><div class="s">{{ it.qty }} × {{ it.price|rupiah }}</div></div>
         <div class="fw-700">{{ it.line_total|rupiah }}</div>
       </div>
       {% endfor %}

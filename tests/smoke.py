@@ -61,6 +61,11 @@ def main():
                  "/kelola/produk", "/kelola/pesanan", "/kelola/ulasan", "/pengaturan", "/pengguna"]:
         ok(c.get(path).status_code == 200, f"GET {path}")
 
+    # Varian produk
+    r = c.post("/kelola/produk/1/varian/tambah", data={"label": "M", "sku": "M1", "stock": "5"})
+    ok(r.status_code in (302, 303), "Tambah varian produk")
+    ok(c.get("/produk/kaos-uji").status_code == 200, "Produk dengan varian tampil")
+
     # Buat akun investor
     r = c.post("/pengguna/tambah", data={"name": "Investor Uji", "email": "inv@uji.id",
                                          "role": ROLE_INVESTOR, "password": "rahasia123"})
