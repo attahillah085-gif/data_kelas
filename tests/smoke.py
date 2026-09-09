@@ -57,6 +57,7 @@ def main():
 
     print("== Pengelola akses penuh ==")
     for path in ["/dashboard", "/keuangan/", "/inventori/", "/konten/", "/investor/",
+                 "/laporan/", "/laporan/ekspor/transaksi.csv", "/laporan/ekspor/pesanan.csv",
                  "/kelola/produk", "/kelola/pesanan", "/kelola/ulasan", "/pengaturan", "/pengguna"]:
         ok(c.get(path).status_code == 200, f"GET {path}")
 
@@ -71,6 +72,8 @@ def main():
     ok(ci.get("/dashboard").status_code == 200, "Investor lihat /dashboard")
     ok(ci.get("/keuangan/").status_code == 200, "Investor lihat /keuangan/")
     ok(ci.get("/investor/").status_code == 200, "Investor lihat /investor/")
+    ok(ci.get("/laporan/").status_code == 200, "Investor lihat /laporan/")
+    ok(ci.get("/laporan/ekspor/transaksi.csv").status_code == 403, "Investor DILARANG ekspor CSV (403)")
     ok(ci.get("/pengguna").status_code == 403, "Investor DILARANG /pengguna (403)")
     ok(ci.get("/pengaturan").status_code == 403, "Investor DILARANG /pengaturan (403)")
     ok(ci.get("/kelola/produk").status_code == 403, "Investor DILARANG /kelola/produk (403)")

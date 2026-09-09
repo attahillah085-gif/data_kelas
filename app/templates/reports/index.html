@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Laporan — {{ setting.business_name }}{% endblock %}
+{% block page_title %}Laporan & Analitik{% endblock %}
+{% block page_subtitle %}Ringkasan performa bisnis dari waktu ke waktu.{% endblock %}
+
+{% block topbar_actions %}
+  {% if current_user.can_manage %}
+  <div class="dropdown">
+    <button class="btn btn-ghost btn-sm" id="expBtn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> <span class="hide-sm">Ekspor CSV</span></button>
+    <div class="menu" id="expMenu">
+      <a href="{{ url_for('reports.export_transactions') }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg> Transaksi</a>
+      <a href="{{ url_for('reports.export_orders') }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg> Pesanan</a>
+      <a href="{{ url_for('reports.export_products') }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg> Produk</a>
+    </div>
+  </div>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- KPI keseluruhan -->
+<div class="grid g-4">
+  <div class="card kpi"><div class="top"><span class="kpi-ico ico-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span><span class="label">Total Pemasukan</span></div><div class="value sm">{{ total_income|rupiah }}</div><div class="foot">semua periode</div></div>
+  <div class="card kpi"><div class="top"><span class="kpi-ico ico-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg></span><span class="label">Total Pengeluaran</span></div><div class="value sm">{{ total_expense|rupiah }}</div></div>
+  <div class="card kpi"><div class="top"><span class="kpi-ico {{ 'ico-blue' if net>=0 else 'ico-amber' }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span><span class="label">Laba Bersih Total</span></div><div class="value sm {{ 'text-green' if net>0 else 'text-red' if net<0 }}">{{ net|rupiah }}</div></div>
+  <div class="card kpi"><div class="top"><span class="kpi-ico ico-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></span><span class="label">Omzet Toko</span></div><div class="value sm">{{ store_revenue|rupiah }}</div><div class="foot">{{ order_count }} pesanan dibayar</div></div>
+</div>
+
+<!-- Tren per periode -->
+<div class="grid cols-main mt-16">
+  <div class="card">
+    <div class="card-head"><h3>Pemasukan vs Pengeluaran per Periode</h3><div class="spacer"></div><div class="legend"><span><i style="background:var(--primary)"></i>Masuk</span><span><i style="background:var(--danger)"></i>Keluar</span></div></div>
+    <div class="card-body">
+      {% if trend %}
+      <div class="barchart">
+        {% for d in trend %}
+        <div class="bar-group">
+          <div class="bars">
+            <div class="bar inc" style="height:{{ ((d.income / trend_max) * 155)|int if trend_max else 0 }}px" title="Masuk {{ d.income|rupiah }}"></div>
+            <div class="bar exp" style="height:{{ ((d.expense / trend_max) * 155)|int if trend_max else 0 }}px" title="Keluar {{ d.expense|rupiah }}"></div>
+          </div>
+          <div class="lbl2">{{ d.name }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}<div class="empty" style="padding:24px"><p style="margin:0">Belum ada data periode.</p></div>{% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h3>Pengeluaran per Kategori</h3></div>
+    <div class="card-body">
+      {% if cat_rows %}
+        {% set palette = ['var(--primary)','var(--rose)','#a86b52','#c98a3c','#b07d8f','#8a6f61'] %}
+        {% for cat, amt in cat_rows %}
+        <div class="catbar">
+          <div class="row"><span>{{ cat }}</span><span class="fw-700">{{ amt|rupiah }}</span></div>
+          <div class="track"><div class="fill" style="width:{{ (amt/cat_max*100)|int if cat_max else 0 }}%;background:{{ palette[loop.index0 % 6] }}"></div></div>
+        </div>
+        {% endfor %}
+      {% else %}<div class="empty" style="padding:24px 10px"><p style="margin:0">Belum ada pengeluaran.</p></div>{% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Produk terlaris + tabel periode -->
+<div class="grid cols-main mt-16">
+  <div class="card">
+    <div class="card-head"><h3>Produk Terlaris</h3><div class="spacer"></div><span class="text-soft" style="font-size:.8rem">dari pesanan dibayar</span></div>
+    <div class="card-body">
+      {% if top_products %}
+        {% for r in top_products %}
+        <div class="catbar">
+          <div class="row"><span>{{ r.product_name }} <span class="text-soft">· {{ r.qty }} pcs</span></span><span class="fw-700 text-green">{{ r.revenue|rupiah }}</span></div>
+          <div class="track"><div class="fill" style="width:{{ (r.revenue/top_max*100)|int if top_max else 0 }}%;background:linear-gradient(90deg,var(--primary),var(--rose))"></div></div>
+        </div>
+        {% endfor %}
+      {% else %}<div class="empty" style="padding:24px 10px"><p style="margin:0">Belum ada penjualan tercatat dari toko.</p></div>{% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h3>Rekap per Periode</h3></div>
+    <div class="table-wrap">
+      <table class="tbl">
+        <thead><tr><th>Periode</th><th class="num">Masuk</th><th class="num">Keluar</th><th class="num">Laba</th></tr></thead>
+        <tbody>
+          {% for d in trend %}
+          <tr><td class="fw-700">{{ d.name }}</td><td class="num text-green">{{ d.income|rupiah }}</td><td class="num text-red">{{ d.expense|rupiah }}</td><td class="num fw-700 {{ 'text-green' if d.profit>=0 else 'text-red' }}">{{ d.profit|rupiah }}</td></tr>
+          {% else %}
+          <tr><td colspan="4" class="empty" style="padding:26px">Belum ada periode.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function(){
+    var b=document.getElementById('expBtn'), m=document.getElementById('expMenu');
+    if(b&&m){ b.addEventListener('click',function(e){e.stopPropagation();m.classList.toggle('open');});
+      document.addEventListener('click',function(){m.classList.remove('open');}); }
+  })();
+</script>
+{% endblock %}
