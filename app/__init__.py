@@ -11,6 +11,44 @@ from .extensions import db, login_manager
 from .utils import register_filters
 
 
+def _auto_migrate_sqlite() -> None:
+    """Tambah kolom baru pada tabel yang sudah ada (SQLite) tanpa hapus data.
+
+    Dipanggil saat startup. Aman: hanya menambah kolom yang belum ada, sesuai
+    definisi model — sehingga penambahan fitur tidak butuh reset database.
+    """
+    try:
+        from sqlalchemy import inspect, text
+        if db.engine.url.get_backend_name() != "sqlite":
+            return
+        insp = inspect(db.engine)
+        tables = set(insp.get_table_names())
+        with db.engine.begin() as conn:
+            for table in db.metadata.sorted_tables:
+                if table.name not in tables:
+                    continue
+                have = {c["name"] for c in insp.get_columns(table.name)}
+                for col in table.columns:
+                    if col.name in have:
+                        continue
+                    try:
+                        col_type = col.type.compile(dialect=db.engine.dialect)
+                    except Exception:
+                        col_type = "TEXT"
+                    ddl = f'ALTER TABLE "{table.name}" ADD COLUMN "{col.name}" {col_type}'
+                    default = getattr(getattr(col, "default", None), "arg", None)
+                    if isinstance(default, bool):
+                        ddl += f" DEFAULT {1 if default else 0}"
+                    elif isinstance(default, (int, float)):
+                        ddl += f" DEFAULT {default}"
+                    elif isinstance(default, str):
+                        ddl += " DEFAULT '" + default.replace("'", "''") + "'"
+                    conn.execute(text(ddl))
+    except Exception:
+        # Auto-migrasi tidak boleh menggagalkan startup
+        pass
+
+
 def create_app(config_object: type = Config) -> Flask:
     app = Flask(__name__, instance_relative_config=False)
     app.config.from_object(config_object)
@@ -53,6 +91,8 @@ def create_app(config_object: type = Config) -> Flask:
                 db.session.commit()
             except Exception:
                 db.session.rollback()
+        # Auto-migrasi ringan: tambah kolom baru tanpa menghapus data
+        _auto_migrate_sqlite()
 
     _register_context(app)
     _register_pwa(app)
@@ -63,7 +103,7 @@ def create_app(config_object: type = Config) -> Flask:
 def _register_context(app: Flask) -> None:
     import os
     from flask import url_for
-    from .models import Notification, Order, Setting, ORDER_PENDING
+    from .models import Notification, Order, Review, Setting, ORDER_PENDING
 
     def _detect_logo():
         for name in ("logo.png", "logo.jpg", "logo.jpeg", "logo.webp", "logo.svg"):
@@ -75,6 +115,7 @@ def _register_context(app: Flask) -> None:
     def inject_globals():
         unread = 0
         pending_orders = 0
+        pending_reviews = 0
         recent_notifs = []
         setting = None
         brand_logo = _detect_logo()
@@ -92,12 +133,14 @@ def _register_context(app: Flask) -> None:
                 )
                 if current_user.can_manage:
                     pending_orders = Order.query.filter_by(status=ORDER_PENDING).count()
+                    pending_reviews = Review.query.filter_by(approved=False).count()
         except Exception:
             pass
         return {
             "setting": setting,
             "unread_count": unread,
             "pending_orders": pending_orders,
+            "pending_reviews": pending_reviews,
             "recent_notifs": recent_notifs,
             "brand_logo": brand_logo,
             "now": datetime.utcnow(),

@@ -73,6 +73,11 @@
       Pesanan
       {% if pending_orders %}<span class="nav-badge">{{ pending_orders }}</span>{% endif %}
     </a>
+    <a class="nav-item {{ 'active' if request.endpoint=='catalog.reviews' }}" href="{{ url_for('catalog.reviews') }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 3.5l2.3 4.7 5.2.8-3.8 3.7.9 5.2-4.6-2.4-4.6 2.4.9-5.2L4 9l5.2-.8Z"/></svg>
+      Ulasan
+      {% if pending_reviews %}<span class="nav-badge">{{ pending_reviews }}</span>{% endif %}
+    </a>
     <a class="nav-item" href="{{ url_for('store.index') }}" target="_blank">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>
       Lihat Toko

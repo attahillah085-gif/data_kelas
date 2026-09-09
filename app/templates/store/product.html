@@ -54,6 +54,13 @@
         {% if p.compare_price and p.compare_price > p.price %}<span class="was">{{ p.compare_price|rupiah }}</span>{% endif %}
       </div>
 
+      {% if p.review_count %}
+      <div class="flex gap-6" style="margin-bottom:12px">
+        <span class="stars stars-lg">{% for i in range(5) %}<span class="{{ 'on' if i < p.avg_rating|round(0,'common')|int }}">★</span>{% endfor %}</span>
+        <a href="#ulasan" class="text-muted" style="font-size:.85rem;align-self:center">{{ p.avg_rating }} · {{ p.review_count }} ulasan</a>
+      </div>
+      {% endif %}
+
       <div class="pdetail-meta">
         {% if p.size %}<span class="badge b-blue">Ukuran: {{ p.size }}</span>{% endif %}
         {% if p.condition %}<span class="badge b-muted">{{ p.condition }}</span>{% endif %}
@@ -75,9 +82,50 @@
           {% if p.in_stock %}Tambah ke Keranjang{% else %}Stok Habis{% endif %}
         </button>
       </div>
-      <a class="btn btn-ghost btn-block mt-16" href="{{ url_for('store.cart') }}">Lihat Keranjang →</a>
+      <div class="flex gap-8 mt-16">
+        <button class="btn btn-ghost wish-btn" data-wish data-id="{{ p.id }}" data-name="{{ p.name }}"
+          data-price="{{ p.price }}" data-image="{{ p.image }}" data-slug="{{ p.slug }}">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>
+          <span class="wish-label">Wishlist</span>
+        </button>
+        <a class="btn btn-ghost" style="flex:1" href="{{ url_for('store.cart') }}">Lihat Keranjang →</a>
+      </div>
     </div>
   </div>
+
+  <!-- Ulasan -->
+  <section class="section" id="ulasan">
+    <div class="section-head"><h2>Ulasan Pembeli</h2>
+      {% if p.review_count %}<div class="spacer"></div><span class="stars stars-lg">{% for i in range(5) %}<span class="{{ 'on' if i < p.avg_rating|round(0,'common')|int }}">★</span>{% endfor %}</span><span class="text-muted" style="align-self:center;font-size:.9rem">&nbsp;{{ p.avg_rating }}/5</span>{% endif %}
+    </div>
+    <div class="grid cols-main">
+      <div class="stack">
+        {% for r in p.approved_reviews %}
+        <div class="card card-pad review-item">
+          <div class="row-between"><strong>{{ r.name }}</strong><span class="stars">{% for i in range(5) %}<span class="{{ 'on' if i < r.rating }}">★</span>{% endfor %}</span></div>
+          <p class="text-muted" style="margin:6px 0 0">{{ r.comment }}</p>
+          <div class="text-soft" style="font-size:.74rem;margin-top:6px">{{ r.created_at.strftime('%d %b %Y') }}</div>
+        </div>
+        {% else %}
+        <div class="muted-box">Belum ada ulasan. Jadi yang pertama! ✍️</div>
+        {% endfor %}
+      </div>
+      <div class="card card-pad">
+        <h3 style="font-size:1rem" class="mb-16">Tulis Ulasan</h3>
+        <form method="post" action="{{ url_for('store.add_review', slug=p.slug) }}">
+          <div class="field"><label>Nama</label><input name="name" placeholder="Nama kamu" required></div>
+          <div class="field"><label>Rating</label>
+            <div class="rating-input" id="ratingInput">
+              {% for n in [5,4,3,2,1] %}<input type="radio" name="rating" id="star{{ n }}" value="{{ n }}" {{ 'checked' if n==5 }}><label for="star{{ n }}" title="{{ n }} bintang">★</label>{% endfor %}
+            </div>
+          </div>
+          <div class="field"><label>Ulasan</label><textarea name="comment" placeholder="Bagaimana produknya?" required></textarea></div>
+          <button class="btn btn-primary btn-block" type="submit">Kirim Ulasan</button>
+          <p class="text-soft mt-8" style="font-size:.76rem">Ulasan tampil setelah disetujui admin.</p>
+        </form>
+      </div>
+    </div>
+  </section>
 
   {% if related %}
   <section class="section">

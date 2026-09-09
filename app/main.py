@@ -183,6 +183,9 @@ def settings():
             s.shipping_fee = max(int(float(request.form.get("shipping_fee") or 0)), 0)
         except ValueError:
             pass
+        s.promo_active = bool(request.form.get("promo_active"))
+        s.promo_text = (request.form.get("promo_text") or "").strip()
+        s.promo_link = (request.form.get("promo_link") or "").strip()
         db.session.commit()
         flash("Pengaturan disimpan.", "success")
         return redirect(url_for("main.settings"))

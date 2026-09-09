@@ -149,4 +149,69 @@
     document.getElementById("coTotal").textContent = rupiah(subtotal + shipping);
     document.getElementById("itemsField").value = JSON.stringify(c.map(function (i) { return { id: i.id, qty: i.qty }; }));
   }
+
+  /* ---------- Wishlist ---------- */
+  var WISH_KEY = "tgh-wishlist";
+  function getWish() { try { return JSON.parse(localStorage.getItem(WISH_KEY)) || []; } catch (e) { return []; } }
+  function setWish(w) { try { localStorage.setItem(WISH_KEY, JSON.stringify(w)); } catch (e) {} updateWishBadge(); }
+  function inWish(id) { return getWish().some(function (x) { return x.id === id; }); }
+  function updateWishBadge() {
+    var el = document.getElementById("wishCount");
+    if (el) { var n = getWish().length; if (n) { el.textContent = n; el.hidden = false; } else { el.hidden = true; } }
+  }
+  updateWishBadge();
+
+  // Tandai tombol yang sudah di wishlist
+  function syncWishButtons() {
+    document.querySelectorAll(".wish-btn[data-id]").forEach(function (b) {
+      b.classList.toggle("on", inWish(parseInt(b.getAttribute("data-id"), 10)));
+    });
+  }
+  syncWishButtons();
+
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest(".wish-btn");
+    if (!b || !b.hasAttribute("data-id")) return;
+    e.preventDefault();
+    var id = parseInt(b.getAttribute("data-id"), 10);
+    var w = getWish();
+    if (inWish(id)) {
+      w = w.filter(function (x) { return x.id !== id; });
+      toast("Dihapus dari wishlist");
+    } else {
+      w.push({ id: id, name: b.getAttribute("data-name"), price: parseInt(b.getAttribute("data-price"), 10),
+               image: b.getAttribute("data-image") || "", slug: b.getAttribute("data-slug") || "" });
+      toast("Disimpan ke wishlist ❤");
+    }
+    setWish(w);
+    syncWishButtons();
+    if (document.getElementById("wishGrid")) renderWishlist();
+  });
+
+  /* ---------- Wishlist page ---------- */
+  var wishGrid = document.getElementById("wishGrid");
+  if (wishGrid) renderWishlist();
+  function renderWishlist() {
+    var w = getWish();
+    var empty = document.getElementById("wishEmpty");
+    if (!w.length) { wishGrid.hidden = true; empty.hidden = false; return; }
+    wishGrid.hidden = false; empty.hidden = true;
+    wishGrid.innerHTML = "";
+    w.forEach(function (it) {
+      var href = "/produk/" + it.slug;
+      var img = it.image ? '<img src="' + it.image + '" alt="" loading="lazy">' :
+        '<div class="pcard-noimg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M20 7h-3.5l-1-2h-7l-1 2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z"/></svg></div>';
+      var el = document.createElement("article");
+      el.className = "pcard";
+      el.innerHTML =
+        '<a class="pcard-img" href="' + href + '">' + img + '</a>' +
+        '<button class="wish-btn on" data-id="' + it.id + '" data-name="' + it.name + '" data-price="' + it.price +
+        '" data-image="' + it.image + '" data-slug="' + it.slug + '"><svg viewBox="0 0 24 24" width="18" height="18" fill="var(--rose)" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg></button>' +
+        '<div class="pcard-body"><a class="pcard-name" href="' + href + '">' + it.name + '</a>' +
+        '<div class="pcard-price"><span class="now">' + rupiah(it.price) + '</span></div>' +
+        '<button class="btn btn-primary btn-block add-cart" data-id="' + it.id + '" data-name="' + it.name +
+        '" data-price="' + it.price + '" data-image="' + it.image + '" data-slug="' + it.slug + '">+ Keranjang</button></div>';
+      wishGrid.appendChild(el);
+    });
+  }
 })();

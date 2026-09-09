@@ -35,6 +35,26 @@
   </section>
   {% endif %}
 
+  <!-- Filter -->
+  <form method="get" class="filter-bar">
+    {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+    {% if category %}<input type="hidden" name="kategori" value="{{ category }}">{% endif %}
+    <div class="filter-group">
+      <label>Harga</label>
+      <input type="number" name="harga_min" placeholder="Min" value="{{ pmin if pmin is not none }}" min="0" style="width:100px">
+      <span class="text-soft">–</span>
+      <input type="number" name="harga_max" placeholder="Maks" value="{{ pmax if pmax is not none }}" min="0" style="width:100px">
+    </div>
+    {% if sizes %}
+    <div class="filter-group">
+      <label>Ukuran</label>
+      <select name="ukuran" style="width:120px"><option value="">Semua</option>{% for s in sizes %}<option {{ 'selected' if size==s }}>{{ s }}</option>{% endfor %}</select>
+    </div>
+    {% endif %}
+    <button class="btn btn-primary btn-sm" type="submit">Terapkan</button>
+    {% if has_filter %}<a class="btn btn-ghost btn-sm" href="{{ url_for('store.index') }}">Reset</a>{% endif %}
+  </form>
+
   <section class="section" id="produk">
     <div class="section-head">
       <h2>{{ ('Hasil pencarian "' + q + '"') if q else (category if category else 'Semua Produk') }}</h2>
@@ -42,6 +62,9 @@
       <form method="get" class="sort-form">
         {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
         {% if category %}<input type="hidden" name="kategori" value="{{ category }}">{% endif %}
+        {% if size %}<input type="hidden" name="ukuran" value="{{ size }}">{% endif %}
+        {% if pmin is not none %}<input type="hidden" name="harga_min" value="{{ pmin }}">{% endif %}
+        {% if pmax is not none %}<input type="hidden" name="harga_max" value="{{ pmax }}">{% endif %}
         <select name="urut" onchange="this.form.submit()">
           <option value="">Terbaru</option>
           <option value="murah" {{ 'selected' if sort=='murah' }}>Harga termurah</option>

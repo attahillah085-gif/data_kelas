@@ -9,6 +9,7 @@ from .models import (
     Order,
     Product,
     PRODUCT_CATEGORIES,
+    Review,
     ORDER_STATUSES,
     ORDER_STATUS_LABELS,
     ORDER_PENDING,
@@ -195,3 +196,39 @@ def order_delete(oid):
     db.session.commit()
     flash(f"Pesanan {code} dihapus.", "info")
     return redirect(url_for("catalog.orders"))
+
+
+# ----------------------------------------------------------------- Ulasan
+@bp.route("/ulasan")
+@login_required
+@manage_required
+def reviews():
+    pending = (Review.query.filter_by(approved=False)
+               .order_by(Review.created_at.desc()).all())
+    approved = (Review.query.filter_by(approved=True)
+                .order_by(Review.created_at.desc()).limit(50).all())
+    return render_template("catalog/reviews.html", pending=pending, approved=approved)
+
+
+@bp.route("/ulasan/<int:rid>/setuju", methods=["POST"])
+@login_required
+@manage_required
+def review_approve(rid):
+    r = db.session.get(Review, rid)
+    if r:
+        r.approved = not r.approved
+        db.session.commit()
+        flash("Ulasan " + ("ditampilkan" if r.approved else "disembunyikan") + ".", "success")
+    return redirect(url_for("catalog.reviews"))
+
+
+@bp.route("/ulasan/<int:rid>/hapus", methods=["POST"])
+@login_required
+@manage_required
+def review_delete(rid):
+    r = db.session.get(Review, rid)
+    if r:
+        db.session.delete(r)
+        db.session.commit()
+        flash("Ulasan dihapus.", "info")
+    return redirect(url_for("catalog.reviews"))

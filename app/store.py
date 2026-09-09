@@ -20,6 +20,7 @@ from .models import (
     OrderItem,
     Product,
     PRODUCT_CATEGORIES,
+    Review,
     Setting,
 )
 from .services import generate_order_code, notify_managers, whatsapp_link
@@ -34,12 +35,22 @@ def index():
     category = request.args.get("kategori", "")
     sort = request.args.get("urut", "")
 
+    size = (request.args.get("ukuran") or "").strip()
+    pmin = request.args.get("harga_min", type=int)
+    pmax = request.args.get("harga_max", type=int)
+
     query = Product.query.filter_by(active=True)
     if q:
         like = f"%{q}%"
         query = query.filter(db.or_(Product.name.ilike(like), Product.description.ilike(like)))
     if category:
         query = query.filter_by(category=category)
+    if size:
+        query = query.filter(Product.size.ilike(f"%{size}%"))
+    if pmin is not None:
+        query = query.filter(Product.price >= pmin)
+    if pmax is not None:
+        query = query.filter(Product.price <= pmax)
 
     if sort == "murah":
         query = query.order_by(Product.price.asc())
@@ -49,20 +60,24 @@ def index():
         query = query.order_by(Product.featured.desc(), Product.created_at.desc())
 
     products = query.all()
+    has_filter = bool(q or category or size or pmin is not None or pmax is not None)
     featured = (
         Product.query.filter_by(active=True, featured=True)
         .order_by(Product.created_at.desc())
         .limit(4)
         .all()
-        if not (q or category) else []
+        if not has_filter else []
     )
-    # Kategori yang benar-benar terpakai
+    # Kategori & ukuran yang benar-benar terpakai (untuk filter)
+    active_products = Product.query.filter_by(active=True).all()
     used_cats = [c for c in PRODUCT_CATEGORIES
-                 if Product.query.filter_by(active=True, category=c).count() > 0]
+                 if any(pr.category == c for pr in active_products)]
+    sizes = sorted({s.strip() for pr in active_products for s in (pr.size or "").replace("/", ",").split(",") if s.strip()})
 
     return render_template(
         "store/index.html", setting=setting, products=products, featured=featured,
-        categories=used_cats, q=q, category=category, sort=sort,
+        categories=used_cats, sizes=sizes, q=q, category=category, sort=sort,
+        size=size, pmin=pmin, pmax=pmax, has_filter=has_filter,
     )
 
 
@@ -77,6 +92,33 @@ def product(slug):
         .order_by(Product.created_at.desc()).limit(4).all()
     )
     return render_template("store/product.html", p=p, related=related)
+
+
+@bp.route("/produk/<slug>/ulasan", methods=["POST"])
+def add_review(slug):
+    p = Product.query.filter_by(slug=slug).first()
+    if p is None or not p.active:
+        abort(404)
+    name = (request.form.get("name") or "").strip()
+    comment = (request.form.get("comment") or "").strip()
+    try:
+        rating = int(request.form.get("rating") or 5)
+    except (TypeError, ValueError):
+        rating = 5
+    rating = min(max(rating, 1), 5)
+    if not name or not comment:
+        flash("Nama & ulasan wajib diisi.", "danger")
+        return redirect(url_for("store.product", slug=slug))
+    db.session.add(Review(product_id=p.id, name=name, rating=rating,
+                          comment=comment, approved=False))
+    db.session.commit()
+    flash("Terima kasih! Ulasan kamu akan tampil setelah disetujui admin.", "success")
+    return redirect(url_for("store.product", slug=slug))
+
+
+@bp.route("/wishlist")
+def wishlist():
+    return render_template("store/wishlist.html", setting=Setting.get())
 
 
 @bp.route("/keranjang")

@@ -1,0 +1,18 @@
+{% extends "store/store_base.html" %}
+{% block title %}Wishlist — {{ setting.business_name }}{% endblock %}
+{% block meta_desc %}Produk favorit yang kamu simpan di {{ setting.business_name }}.{% endblock %}
+
+{% block content %}
+<div class="store-wrap">
+  <div class="section-head"><h2>❤ Wishlist Kamu</h2></div>
+
+  <div id="wishGrid" class="pgrid" hidden></div>
+
+  <div class="empty" id="wishEmpty" style="padding:60px 20px" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>
+    <h4>Wishlist masih kosong</h4>
+    <p>Klik ikon hati ❤ di produk untuk menyimpannya ke sini.</p>
+    <a class="btn btn-primary" href="{{ url_for('store.index') }}">Jelajahi Produk</a>
+  </div>
+</div>
+{% endblock %}

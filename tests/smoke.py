@@ -43,8 +43,11 @@ def main():
     print("== Publik ==")
     ok(c.get("/").status_code == 200, "GET / (toko)")
     ok(c.get("/keranjang").status_code == 200, "GET /keranjang")
-    for path in ["/tentang", "/faq", "/cara-order", "/kebijakan", "/sitemap.xml", "/robots.txt"]:
+    for path in ["/tentang", "/faq", "/cara-order", "/kebijakan", "/sitemap.xml",
+                 "/robots.txt", "/wishlist", "/produk/kaos-uji"]:
         ok(c.get(path).status_code == 200, f"GET {path}")
+    r = c.post("/produk/kaos-uji/ulasan", data={"name": "Uji", "rating": "5", "comment": "Barang bagus"})
+    ok(r.status_code in (302, 303), "Kirim ulasan produk")
 
     print("== Setup pengelola pertama ==")
     # Saat belum ada user, /login mengarah ke /setup
@@ -54,7 +57,7 @@ def main():
 
     print("== Pengelola akses penuh ==")
     for path in ["/dashboard", "/keuangan/", "/inventori/", "/konten/", "/investor/",
-                 "/kelola/produk", "/kelola/pesanan", "/pengaturan", "/pengguna"]:
+                 "/kelola/produk", "/kelola/pesanan", "/kelola/ulasan", "/pengaturan", "/pengguna"]:
         ok(c.get(path).status_code == 200, f"GET {path}")
 
     # Buat akun investor

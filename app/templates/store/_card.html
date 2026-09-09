@@ -8,9 +8,20 @@
     {% if p.discount_percent %}<span class="pcard-badge sale">-{{ p.discount_percent }}%</span>{% endif %}
     {% if not p.in_stock %}<span class="pcard-badge out">Habis</span>{% endif %}
   </a>
+  <button class="wish-btn" title="Simpan ke wishlist"
+    data-wish data-id="{{ p.id }}" data-name="{{ p.name }}" data-price="{{ p.price }}"
+    data-image="{{ p.image }}" data-slug="{{ p.slug }}" aria-label="Wishlist">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>
+  </button>
   <div class="pcard-body">
     <div class="pcard-cat">{{ p.category }}{% if p.size %} · {{ p.size }}{% endif %}</div>
     <a class="pcard-name" href="{{ url_for('store.product', slug=p.slug) }}">{{ p.name }}</a>
+    {% if p.review_count %}
+    <div class="pcard-rating" title="{{ p.avg_rating }} dari {{ p.review_count }} ulasan">
+      <span class="stars">{% for i in range(5) %}<span class="{{ 'on' if i < p.avg_rating|round(0,'common')|int }}">★</span>{% endfor %}</span>
+      <span class="rc">({{ p.review_count }})</span>
+    </div>
+    {% endif %}
     <div class="pcard-price">
       <span class="now">{{ p.price|rupiah }}</span>
       {% if p.compare_price and p.compare_price > p.price %}<span class="was">{{ p.compare_price|rupiah }}</span>{% endif %}

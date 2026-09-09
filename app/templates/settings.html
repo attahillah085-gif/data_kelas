@@ -36,6 +36,13 @@
           <div class="field"><label>Instagram</label><input name="instagram" value="{{ s.instagram }}" placeholder="@username"></div>
           <div class="field"><label>TikTok</label><input name="tiktok" value="{{ s.tiktok }}" placeholder="@username"></div>
         </div>
+        <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px">
+          <label class="check mb-8"><input type="checkbox" name="promo_active" {{ 'checked' if s.promo_active }}> Tampilkan banner promo di atas toko</label>
+          <div class="form-row">
+            <div class="field"><label>Teks promo</label><input name="promo_text" value="{{ s.promo_text }}" placeholder="mis. Gratis ongkir min. belanja 100rb!"></div>
+            <div class="field"><label>Link promo <span class="text-soft">(opsional)</span></label><input name="promo_link" value="{{ s.promo_link }}" placeholder="/ atau https://..."></div>
+          </div>
+        </div>
       </div>
 
       <div class="dialog-foot" style="border-top:1px solid var(--border)"><button class="btn btn-primary" type="submit">Simpan Pengaturan</button></div>

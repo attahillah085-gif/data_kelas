@@ -172,6 +172,40 @@ body.store { background: var(--bg); }
 .store-foot-links { display: flex; flex-direction: column; gap: 8px; }
 .foot-title { font-weight: 700; font-size: .82rem; color: var(--text); margin-bottom: 2px; }
 
+/* ---------- Promo bar ---------- */
+.promo-bar { display: block; text-align: center; color: #fff; font-weight: 600; font-size: .86rem;
+  padding: 9px 16px; background: linear-gradient(90deg, var(--primary), var(--rose)); }
+.promo-bar:hover { text-decoration: none; filter: brightness(1.05); }
+
+/* ---------- Wishlist heart di kartu ---------- */
+.pcard .wish-btn { position: absolute; top: 10px; right: 10px; z-index: 3;
+  width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
+  background: color-mix(in srgb, var(--surface) 88%, transparent); color: var(--text-muted);
+  display: grid; place-items: center; box-shadow: var(--shadow); backdrop-filter: blur(4px); }
+.pcard .wish-btn:hover { color: var(--rose); }
+.wish-btn.on { color: var(--rose) !important; }
+.wish-btn.on svg { fill: var(--rose); }
+
+/* ---------- Bintang rating ---------- */
+.stars { color: #d9c6b6; font-size: .9rem; letter-spacing: 1px; white-space: nowrap; }
+.stars .on { color: #e0a72e; }
+.stars-lg { font-size: 1.15rem; }
+.pcard-rating { display: flex; align-items: center; gap: 6px; font-size: .8rem; }
+.pcard-rating .rc { color: var(--text-soft); }
+.review-item p { line-height: 1.6; }
+
+.rating-input { display: inline-flex; flex-direction: row-reverse; justify-content: flex-end; font-size: 1.8rem; gap: 3px; }
+.rating-input input { position: absolute; opacity: 0; width: 0; height: 0; }
+.rating-input label { color: #d9c6b6; cursor: pointer; transition: color .1s; }
+.rating-input label:hover, .rating-input label:hover ~ label, .rating-input input:checked ~ label { color: #e0a72e; }
+
+/* ---------- Filter bar ---------- */
+.filter-bar { display: flex; gap: 18px; align-items: center; flex-wrap: wrap;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px 16px; margin: 4px 0 4px; }
+.filter-group { display: flex; align-items: center; gap: 8px; }
+.filter-group label { font-size: .82rem; font-weight: 600; color: var(--text-muted); }
+.filter-group input, .filter-group select { padding: 8px 11px; }
+
 /* Tombol WhatsApp mengambang */
 .wa-float { position: fixed; right: 18px; bottom: 18px; z-index: 120;
   width: 56px; height: 56px; border-radius: 50%; background: #25d366; color: #fff;

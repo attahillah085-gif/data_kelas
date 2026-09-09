@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Ulasan — {{ setting.business_name }}{% endblock %}
+{% block page_title %}Ulasan Produk{% endblock %}
+{% block page_subtitle %}Setujui ulasan sebelum tampil di toko.{% endblock %}
+
+{% macro review_row(r, is_pending) %}
+<div class="card card-pad">
+  <div class="row-between">
+    <div>
+      <strong>{{ r.name }}</strong>
+      <span class="stars" style="margin-left:6px">{% for i in range(5) %}<span class="{{ 'on' if i < r.rating }}">★</span>{% endfor %}</span>
+      {% if r.product %}<a class="text-muted" style="font-size:.8rem;margin-left:6px" href="{{ url_for('store.product', slug=r.product.slug) }}" target="_blank">· {{ r.product.name }}</a>{% endif %}
+    </div>
+    <span class="text-soft" style="font-size:.76rem">{{ r.created_at.strftime('%d %b %Y') }}</span>
+  </div>
+  <p class="text-muted" style="margin:8px 0 12px">{{ r.comment }}</p>
+  <div class="flex gap-6">
+    <form method="post" action="{{ url_for('catalog.review_approve', rid=r.id) }}">
+      <button class="btn btn-sm {{ 'btn-primary' if is_pending else 'btn-ghost' }}" type="submit">{{ 'Setujui & Tampilkan' if is_pending else 'Sembunyikan' }}</button>
+    </form>
+    <form method="post" action="{{ url_for('catalog.review_delete', rid=r.id) }}" onsubmit="return confirm('Hapus ulasan ini?')">
+      <button class="btn btn-danger-soft btn-sm" type="submit">Hapus</button>
+    </form>
+  </div>
+</div>
+{% endmacro %}
+
+{% block content %}
+<div class="section-title"><h2 style="font-size:1.05rem">Menunggu Persetujuan {% if pending %}<span class="badge b-amber">{{ pending|length }}</span>{% endif %}</h2></div>
+{% if pending %}
+<div class="stack mb-24">{% for r in pending %}{{ review_row(r, true) }}{% endfor %}</div>
+{% else %}
+<div class="card card-pad empty" style="padding:30px"><p style="margin:0">Tidak ada ulasan menunggu. 👍</p></div>
+{% endif %}
+
+<div class="section-title mt-24"><h2 style="font-size:1.05rem">Ulasan Tampil</h2></div>
+{% if approved %}
+<div class="stack">{% for r in approved %}{{ review_row(r, false) }}{% endfor %}</div>
+{% else %}
+<div class="card card-pad empty" style="padding:30px"><p style="margin:0">Belum ada ulasan yang tampil.</p></div>
+{% endif %}
+{% endblock %}

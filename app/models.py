@@ -160,6 +160,11 @@ class Setting(db.Model):
     tiktok = db.Column(db.String(120), default="")
     shipping_fee = db.Column(db.Integer, default=0)
 
+    # Banner promo di toko
+    promo_active = db.Column(db.Boolean, default=False)
+    promo_text = db.Column(db.String(200), default="")
+    promo_link = db.Column(db.String(255), default="")
+
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     @staticmethod
@@ -385,6 +390,8 @@ class Product(db.Model):
     featured = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    reviews = db.relationship("Review", backref="product", cascade="all, delete-orphan")
+
     @property
     def in_stock(self) -> bool:
         return self.stock > 0
@@ -398,6 +405,21 @@ class Product(db.Model):
     @property
     def image_or_placeholder(self) -> str:
         return self.image or ""
+
+    @property
+    def approved_reviews(self):
+        return [r for r in self.reviews if r.approved]
+
+    @property
+    def review_count(self) -> int:
+        return len(self.approved_reviews)
+
+    @property
+    def avg_rating(self) -> float:
+        revs = self.approved_reviews
+        if not revs:
+            return 0.0
+        return round(sum(r.rating for r in revs) / len(revs), 1)
 
 
 class Order(db.Model):
@@ -449,3 +471,15 @@ class OrderItem(db.Model):
     @property
     def line_total(self) -> int:
         return self.price * self.qty
+
+
+class Review(db.Model):
+    __tablename__ = "reviews"
+
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False, index=True)
+    name = db.Column(db.String(80), nullable=False)
+    rating = db.Column(db.Integer, default=5)          # 1..5
+    comment = db.Column(db.Text, default="")
+    approved = db.Column(db.Boolean, default=False, index=True)  # moderasi admin
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
