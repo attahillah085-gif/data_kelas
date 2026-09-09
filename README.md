@@ -1,4 +1,4 @@
-# 🛍️ ThriftFlow — Manajemen Bisnis Thrifting
+# 🛍️ The Girl House — Manajemen Bisnis Thrifting
 
 Aplikasi web (PWA) untuk mengelola **bisnis thrifting baju** secara menyeluruh:
 keuangan per periode, stok, jadwal konten, dan bagi hasil investor — dalam satu tempat

@@ -141,7 +141,7 @@ class Setting(db.Model):
     __tablename__ = "settings"
 
     id = db.Column(db.Integer, primary_key=True)
-    business_name = db.Column(db.String(120), default="ThriftFlow")
+    business_name = db.Column(db.String(120), default="The Girl House")
     tagline = db.Column(db.String(200), default="Manajemen Bisnis Thrifting")
     currency_symbol = db.Column(db.String(8), default="Rp")
     # Porsi laba yang ditahan bisnis/owner sebelum sisanya dibagi ke investor (%)

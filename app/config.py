@@ -34,7 +34,7 @@ class Config:
     SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True}
 
     # Identitas bisnis default (bisa diubah di halaman Pengaturan)
-    APP_NAME = "ThriftFlow"
+    APP_NAME = "The Girl House"
 
     # Web Push (VAPID)
     VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
