@@ -32,15 +32,16 @@
   --info: #9b6a4f;     --info-soft: #f3e6dd;
   --purple: #b07d8f;   --purple-soft: #f2e5ea;   /* rose-ungu */
 
-  --radius: 16px;
-  --radius-sm: 10px;
-  --radius-lg: 22px;
-  --shadow: 0 1px 2px rgba(80,50,35,.05), 0 8px 24px rgba(90,60,40,.08);
-  --shadow-lg: 0 12px 40px rgba(90,60,40,.16);
-  --ring: 0 0 0 3px rgba(155,106,79,.25);
+  --radius: 18px;
+  --radius-sm: 12px;
+  --radius-lg: 26px;
+  --shadow: 0 1px 2px rgba(80,50,35,.04), 0 10px 30px rgba(90,60,40,.07);
+  --shadow-lg: 0 18px 48px rgba(90,60,40,.16);
+  --ring: 0 0 0 4px rgba(155,106,79,.18);
 
-  --sidebar-w: 250px;
+  --sidebar-w: 256px;
   --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "Playfair Display", "Fraunces", Georgia, "Times New Roman", serif;
 }
 
 :root[data-theme="dark"] {
@@ -435,6 +436,49 @@ dialog::backdrop { background: rgba(15,23,42,.45); backdrop-filter: blur(3px); }
   .content { padding: 18px 16px 80px; }
   .topbar { padding: 12px 16px; }
 }
+
+/* =========================================================
+   Penghalus tampilan (biar tidak kaku)
+   ========================================================= */
+/* Heading & brand pakai serif elegan sesuai logo */
+h1, h2, h3, h4, .brand-name, .store-brand-name,
+.hero-text h1, .section-head h2, .card-head h3, .topbar-title h1,
+.auth-card h1, .pdetail-info h1, .empty h4, .dialog-head h3 {
+  font-family: var(--font-display);
+  letter-spacing: -.005em;
+  font-weight: 700;
+}
+.brand-name, .store-brand-name { letter-spacing: 0; }
+
+/* Tombol primary sedikit bergradasi + lebih luwes */
+.btn { border-radius: 13px; padding: 11px 18px; }
+.btn-primary {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--primary) 92%, #fff 8%), var(--primary-strong));
+}
+.btn-primary:hover { background: linear-gradient(180deg, var(--primary), var(--primary-strong)); }
+.btn-lg { border-radius: 15px; }
+
+/* Kartu: transisi & animasi masuk yang halus */
+.card { transition: box-shadow .25s ease, transform .25s ease, border-color .25s ease;
+  animation: tf-rise .5s cubic-bezier(.22,.61,.36,1) both; }
+@keyframes tf-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .card, .pcard { animation: none; } }
+
+/* Input lebih lembut */
+input, select, textarea { border-radius: 13px; }
+input:hover, select:hover, textarea:hover { border-color: var(--border-strong); }
+
+/* Sidebar item aktif: aksen lembut di kiri */
+.nav-item { border-radius: 13px; }
+.nav-item.active { box-shadow: inset 3px 0 0 var(--primary); }
+
+/* Badge & pill sedikit lebih lega */
+.badge { padding: 4px 10px; }
+
+/* Scrollbar hangat */
+* { scrollbar-color: var(--border-strong) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
 
 /* utility hidden */
 [hidden] { display: none !important; }

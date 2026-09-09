@@ -4,7 +4,7 @@
 {% block page_subtitle %}Modal, kepemilikan, dan simulasi bagi hasil per periode.{% endblock %}
 
 {% block topbar_actions %}
-  {% if current_user.is_owner %}
+  {% if current_user.can_manage %}
   <button class="btn btn-primary btn-sm" data-open-dialog="dlgInvest"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> <span class="hide-sm">Setor Modal</span></button>
   {% endif %}
 {% endblock %}
@@ -62,7 +62,7 @@
   <div class="card-head"><h3>Riwayat Setoran Modal</h3></div>
   <div class="table-wrap">
     <table class="tbl">
-      <thead><tr><th>Tanggal</th><th>Investor</th><th>Catatan</th><th class="num">Nominal</th>{% if current_user.is_owner %}<th></th>{% endif %}</tr></thead>
+      <thead><tr><th>Tanggal</th><th>Investor</th><th>Catatan</th><th class="num">Nominal</th>{% if current_user.can_manage %}<th></th>{% endif %}</tr></thead>
       <tbody>
         {% for inv, u in recent %}
         <tr>
@@ -70,7 +70,7 @@
           <td class="fw-700">{{ u.name }}</td>
           <td class="text-muted">{{ inv.note or '—' }}</td>
           <td class="num fw-700">{{ inv.amount|rupiah }}</td>
-          {% if current_user.is_owner %}
+          {% if current_user.can_manage %}
           <td class="num"><form method="post" action="{{ url_for('investors.delete_investment', iid=inv.id) }}" onsubmit="return confirm('Hapus setoran ini?')"><button class="icon-btn btn-sm" style="width:32px;height:32px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button></form></td>
           {% endif %}
         </tr>
@@ -83,7 +83,7 @@
 </div>
 
 <!-- Dialog setor modal -->
-{% if current_user.is_owner %}
+{% if current_user.can_manage %}
 <dialog id="dlgInvest">
   <form method="post" action="{{ url_for('investors.add_investment') }}">
     <div class="dialog-head"><h3>Setor Modal Investor</h3><button type="button" class="icon-btn close-x" data-close-dialog="dlgInvest">✕</button></div>

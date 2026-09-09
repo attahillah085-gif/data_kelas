@@ -3,7 +3,7 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
 from .extensions import db
-from .models import ROLE_OWNER, User
+from .models import ROLE_MANAGER, User
 
 bp = Blueprint("auth", __name__)
 
@@ -37,7 +37,7 @@ def login():
 
 @bp.route("/setup", methods=["GET", "POST"])
 def setup():
-    """Pembuatan akun pemilik pertama kali (hanya saat belum ada user)."""
+    """Pembuatan akun pengelola pertama kali (hanya saat belum ada user)."""
     if User.query.count() > 0:
         return redirect(url_for("auth.login"))
 
@@ -48,12 +48,12 @@ def setup():
         if not (name and email and len(password) >= 6):
             flash("Lengkapi nama, email, dan kata sandi minimal 6 karakter.", "danger")
             return render_template("auth/setup.html")
-        owner = User(name=name, email=email, role=ROLE_OWNER, active=True)
-        owner.set_password(password)
-        db.session.add(owner)
+        admin = User(name=name, email=email, role=ROLE_MANAGER, active=True)
+        admin.set_password(password)
+        db.session.add(admin)
         db.session.commit()
-        login_user(owner)
-        flash("Akun pemilik berhasil dibuat. Selamat datang di ThriftFlow!", "success")
+        login_user(admin)
+        flash("Akun pengelola berhasil dibuat. Selamat datang!", "success")
         return redirect(url_for("main.dashboard"))
 
     return render_template("auth/setup.html")

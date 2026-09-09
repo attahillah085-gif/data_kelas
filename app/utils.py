@@ -43,11 +43,12 @@ def manage_required(view):
 
 
 def owner_required(view):
+    """Dulu khusus owner; kini Pengelola (akses penuh) juga lolos."""
     @wraps(view)
     def wrapped(*args, **kwargs):
         if not current_user.is_authenticated:
             abort(401)
-        if not current_user.is_owner:
+        if not current_user.can_manage:
             abort(403)
         return view(*args, **kwargs)
 

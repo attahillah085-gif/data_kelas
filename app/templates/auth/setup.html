@@ -7,7 +7,7 @@
   <link rel="icon" href="{{ url_for('static', filename='icons/favicon.svg') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <script>(function(){try{var t=localStorage.getItem('tf-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
@@ -20,8 +20,8 @@
     </div>
     <div class="card card-pad">
       <span class="badge b-blue mb-8">Langkah pertama</span>
-      <h1 style="font-size:1.4rem">Buat akun pemilik</h1>
-      <p class="text-muted mb-16">Akun ini akan menjadi <strong>Owner</strong> dengan akses penuh untuk mengelola tim, keuangan, dan seluruh bisnis.</p>
+      <h1 style="font-size:1.4rem">Buat akun pengelola</h1>
+      <p class="text-muted mb-16">Akun ini menjadi <strong>Pengelola</strong> dengan akses penuh untuk mengelola tim, keuangan, dan seluruh bisnis.</p>
 
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}

@@ -24,7 +24,7 @@ aplikasi biasa dan mendukung **notifikasi push**. Tema warna **biru–putih soft
 | **Investor & bagi hasil** | Catat setoran modal, hitung kepemilikan (%), dan **simulasi bagi hasil per periode** sesuai proporsi modal. |
 | **Toko online (marketplace)** | Storefront publik: katalog produk + foto, keranjang, checkout via **WhatsApp**, halaman pesanan. Panel admin kelola produk & pesanan. Pesanan terbayar **otomatis mengurangi stok & tercatat sebagai pemasukan** di keuangan. |
 | **Notifikasi** | Notifikasi in-app + **Web Push** ke HP/desktop (opsional, via VAPID). |
-| **Multi-user** | Peran **Owner** (akses penuh), **Pengelola** (kelola operasional), **Investor** (lihat laporan & bagi hasil). |
+| **Multi-user** | Peran **Pengelola** (akses penuh: keuangan, stok, konten, toko, tim, pengaturan) & **Investor** (lihat semua laporan & bagi hasil, read-only). |
 
 ## 🎨 Teknologi
 
@@ -60,12 +60,12 @@ Buka **http://localhost:5000**
 
 | Peran | Email | Kata sandi |
 |-------|-------|-----------|
-| Owner | `owner@thriftflow.id` | `owner123` |
-| Pengelola | `pengelola@thriftflow.id` | `manager123` |
-| Investor | `andi@thriftflow.id` | `invest123` |
+| Pengelola | `atahillah@thegirlhouse.id` | `atahillah123` |
+| Pengelola | `cendy@thegirlhouse.id` | `cendy123` |
+| Investor | `mifta@thegirlhouse.id` | `mifta123` |
 
-> Tanpa menjalankan `seed.py`, aplikasi akan menampilkan halaman **setup** untuk membuat
-> akun owner pertama saat pertama kali dibuka.
+> Tanpa menjalankan `seed.py`, aplikasi menampilkan halaman **setup** untuk membuat
+> akun **pengelola** pertama saat pertama kali dibuka.
 
 ---
 

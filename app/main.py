@@ -24,7 +24,8 @@ from .models import (
     ORDER_PENDING,
     ROLES,
     ROLE_LABELS,
-    ROLE_OWNER,
+    ROLE_INVESTOR,
+    ROLE_MANAGER,
 )
 from .services import compute_investor_shares, compute_profit_distribution, generate_content_reminders
 from .utils import owner_required
@@ -232,9 +233,10 @@ def user_edit(uid):
     u.name = (request.form.get("name") or u.name).strip()
     new_role = request.form.get("role")
     if new_role in ROLES:
-        # Cegah menghapus owner terakhir
-        if u.is_owner and new_role != ROLE_OWNER and User.query.filter_by(role=ROLE_OWNER).count() <= 1:
-            flash("Tidak bisa menurunkan peran owner terakhir.", "danger")
+        # Cegah menurunkan pengelola aktif terakhir jadi investor (agar tak terkunci)
+        if (u.can_manage and new_role == ROLE_INVESTOR
+                and User.query.filter(User.role == ROLE_MANAGER, User.active.is_(True)).count() <= 1):
+            flash("Tidak bisa menurunkan pengelola aktif terakhir.", "danger")
             return redirect(url_for("main.users"))
         u.role = new_role
     pw = request.form.get("password")
@@ -259,8 +261,9 @@ def user_toggle(uid):
     if u.id == current_user.id:
         flash("Tidak bisa menonaktifkan akun sendiri.", "danger")
         return redirect(url_for("main.users"))
-    if u.is_owner and User.query.filter_by(role=ROLE_OWNER, active=True).count() <= 1 and u.active:
-        flash("Tidak bisa menonaktifkan owner aktif terakhir.", "danger")
+    if (u.can_manage and u.active
+            and User.query.filter(User.role == ROLE_MANAGER, User.active.is_(True)).count() <= 1):
+        flash("Tidak bisa menonaktifkan pengelola aktif terakhir.", "danger")
         return redirect(url_for("main.users"))
     u.active = not u.active
     db.session.commit()

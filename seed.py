@@ -50,15 +50,6 @@ def generate_vapid():
 def seed_demo(app):
     with app.app_context():
         Setting.get()
-        cfg = app.config
-
-        owner = User.query.filter_by(email=cfg["OWNER_EMAIL"].lower()).first()
-        if owner is None:
-            owner = User(name=cfg["OWNER_NAME"], email=cfg["OWNER_EMAIL"].lower(),
-                         role=ROLE_OWNER, active=True)
-            owner.set_password(cfg["OWNER_PASSWORD"])
-            db.session.add(owner)
-            print(f"  ✓ Owner: {owner.email} / {cfg['OWNER_PASSWORD']}")
 
         # Sudah ada data? jangan gandakan
         if Period.query.count() > 0:
@@ -130,14 +121,14 @@ def seed_demo(app):
         contents = [
             ContentSchedule(title="Live Thrift Jumat Malam", kind="LIVE", platform="TikTok",
                             scheduled_at=now + timedelta(days=1, hours=3), assignee_id=manager.id,
-                            created_by_id=owner.id, note="Fokus kaos & jaket"),
+                            created_by_id=manager.id, note="Fokus kaos & jaket"),
             ContentSchedule(title="Reels OOTD Thrift", kind="VIDEO", platform="Instagram",
                             scheduled_at=now + timedelta(days=2, hours=1), assignee_id=manager.id,
-                            created_by_id=owner.id),
+                            created_by_id=manager.id),
             ContentSchedule(title="Flyer Promo Weekend", kind="FLYER", platform="WhatsApp",
-                            scheduled_at=now + timedelta(days=3), created_by_id=owner.id),
+                            scheduled_at=now + timedelta(days=3), created_by_id=manager.id),
             ContentSchedule(title="Restock Post", kind="POST", platform="Instagram",
-                            scheduled_at=now - timedelta(days=2), status="DONE", created_by_id=owner.id),
+                            scheduled_at=now - timedelta(days=2), status="DONE", created_by_id=manager.id),
         ]
         db.session.add_all(contents)
 

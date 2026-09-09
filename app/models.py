@@ -14,13 +14,15 @@ from .extensions import db, login_manager
 # --------------------------------------------------------------------------
 #  Konstanta peran & kategori
 # --------------------------------------------------------------------------
+# Peran: Pengelola = akses penuh (admin), Investor = lihat laporan (read-only).
+# ROLE_OWNER dipertahankan sebagai konstanta legacy (tidak dipakai untuk akun baru).
 ROLE_OWNER = "OWNER"
-ROLE_MANAGER = "MANAGER"      # Pengelola
+ROLE_MANAGER = "MANAGER"      # Pengelola (akses penuh)
 ROLE_INVESTOR = "INVESTOR"
-ROLES = [ROLE_OWNER, ROLE_MANAGER, ROLE_INVESTOR]
+ROLES = [ROLE_MANAGER, ROLE_INVESTOR]
 
 ROLE_LABELS = {
-    ROLE_OWNER: "Pemilik",
+    ROLE_OWNER: "Pengelola",   # legacy -> diperlakukan sebagai pengelola
     ROLE_MANAGER: "Pengelola",
     ROLE_INVESTOR: "Investor",
 }
