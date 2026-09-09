@@ -1,0 +1,18 @@
+# The Girl House — jalan sebagai container, di belakang Caddy (VPS Hostinger).
+# Port hanya dibuka ke localhost (127.0.0.1:8095) — Caddy yang mengarahkan domain ke sini.
+services:
+  thegirlhouse:
+    build: .
+    image: thegirlhouse:latest
+    container_name: thegirlhouse
+    restart: unless-stopped
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - COOKIE_SECURE=1
+      # PostgreSQL (opsional). Default: SQLite di ./instance (sudah cukup).
+      # - DATABASE_URL=postgresql+psycopg://user:pass@host:5432/thegirlhouse
+    volumes:
+      - ./instance:/app/instance                       # database SQLite (permanen)
+      - ./app/static/uploads:/app/static/uploads       # foto produk (permanen)
+    ports:
+      - "127.0.0.1:8095:8000"

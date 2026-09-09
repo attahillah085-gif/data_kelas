@@ -1,0 +1,13 @@
+.git
+.github
+.venv
+venv
+__pycache__
+*.pyc
+instance
+app/static/uploads
+legacy
+*.md
+.env
+scripts
+tests

@@ -61,10 +61,71 @@ lalu klik **Reload** di tab Web. (Data Anda aman — tidak terhapus.)
 
 ---
 
-## 🏆 Hostinger VPS (untuk dipakai bisnis)
+## 🐳 VPS dengan Caddy + Docker (paling pas bila VPS-mu sudah pakai Caddy)
+
+> Cocok bila di VPS sudah ada **Caddy** sebagai reverse-proxy dan project lain jalan
+> sebagai **container Docker** (mis. `aldofinity`, `aldo-license-server`). The Girl House
+> ikut pola yang sama: jalan sebagai 1 container, Caddy yang mengarahkan domain ke sana +
+> pasang **HTTPS otomatis**. Data (SQLite + foto) tersimpan permanen di volume.
+
+Semua perintah di bawah dijalankan **DI DALAM VPS** (via **Browser Terminal** panel
+Hostinger atau SSH) — bukan di komputer Windows-mu.
+
+### 1) Ambil kode & jalankan container
+```bash
+# clone repo ke folder khusus
+git clone --branch claude/thrifting-business-management-ew0pt2 \
+  https://github.com/attahillah085-gif/data_kelas.git /opt/thegirlhouse
+cd /opt/thegirlhouse
+
+# buat file rahasia .env (SECRET_KEY acak, dibuat otomatis)
+printf 'SECRET_KEY=%s\n' "$(openssl rand -hex 32)" > .env
+
+# build image & nyalakan (jalan di background, restart otomatis)
+docker compose up -d --build
+```
+Cek jalan: `docker compose ps` (status `Up`) dan `curl -I http://127.0.0.1:8095`
+(harus balas `200`/`302`). Container hanya terbuka ke **localhost** — belum bisa diakses
+dari internet sampai Caddy dipasang (langkah berikut).
+
+### 2) Arahkan domain lewat Caddy
+Pertama, di pengaturan DNS domain buat **A record** ke IP VPS
+(mis. `toko.domainmu.com → IP-VPS`). Lalu tambahkan blok berikut ke **Caddyfile**
+(biasanya `/etc/caddy/Caddyfile`; ganti domainnya):
+```caddy
+toko.domainmu.com {
+    reverse_proxy 127.0.0.1:8095
+}
+```
+Muat ulang Caddy: `caddy reload --config /etc/caddy/Caddyfile` **atau**
+`systemctl reload caddy` (kalau Caddy jalan sebagai container:
+`docker exec -w /etc/caddy <nama-container-caddy> caddy reload`). Caddy langsung
+memasang **HTTPS gratis** (Let's Encrypt). Buka `https://toko.domainmu.com` →
+halaman **Setup** muncul → buat akun **pengelola** pertama. Selesai! 🎉
+
+> Contoh siap-tempel ada di **`deploy/Caddyfile.snippet`**.
+
+### 3) Merawat
+- **Update ke versi terbaru:** `cd /opt/thegirlhouse && git pull && docker compose up -d --build`
+  (data **aman** — SQLite & foto ada di volume, tidak ikut ter-rebuild).
+- **Lihat log:** `docker compose logs -f`
+- **Restart:** `docker compose restart`
+- **Backup data:** salin folder `/opt/thegirlhouse/instance/` (database) dan
+  `/opt/thegirlhouse/app/static/uploads/` (foto produk).
+- **Notifikasi push (opsional):** buat VAPID key lalu tambahkan ke `.env`:
+  ```bash
+  docker compose run --rm thegirlhouse python seed.py --vapid   # cetak VAPID_PUBLIC_KEY & PRIVATE_KEY
+  # tempel keduanya ke .env, lalu: docker compose up -d
+  ```
+
+---
+
+## 🏆 Hostinger VPS — cara klasik (Nginx, tanpa Docker)
 
 > ⚠️ **Beli paket VPS**, mis. **KVM 1/KVM 2** — **BUKAN** hosting biasa/WordPress.
 > Hosting shared hanya untuk PHP dan **tidak bisa** menjalankan aplikasi Python ini.
+>
+> 💡 Kalau VPS-mu **sudah pakai Caddy + Docker**, pakai cara **🐳 di atas** — lebih cocok.
 
 ### Langkah
 1. **Beli VPS** di Hostinger → saat setup pilih OS **Ubuntu 22.04/24.04**. Catat **IP VPS**

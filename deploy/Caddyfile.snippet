@@ -1,0 +1,12 @@
+# The Girl House — blok Caddy siap-tempel.
+# Salin blok ini ke /etc/caddy/Caddyfile, ganti domainnya, lalu reload Caddy:
+#   caddy reload --config /etc/caddy/Caddyfile   (atau: systemctl reload caddy)
+#
+# Syarat: container thegirlhouse sudah jalan (docker compose up -d) dan
+# domain sudah diarahkan via A record ke IP VPS ini.
+# Caddy otomatis memasang HTTPS gratis (Let's Encrypt).
+
+toko.domainmu.com {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:8095
+}
