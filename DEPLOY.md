@@ -7,8 +7,57 @@ di kedua layanan ini (wajib agar PWA bisa di-install & notifikasi jalan).
 > Butuh: akun GitHub (repo ini) + akun di layanan hosting. Ada paket **gratis**.
 
 Pilih salah satu:
-- **Hostinger VPS** — cocok untuk dipakai bisnis, always-on, data permanen (di bawah).
-- **Render** — paling cepat untuk coba/demo gratis.
+- **PythonAnywhere** — GRATIS, **tanpa kartu kredit**, dapat link online (di bawah). ⭐ paling pas.
+- **Hostinger VPS** — cocok untuk dipakai bisnis, always-on, data permanen.
+- **Render** — cepat, tapi paket gratisnya kini minta verifikasi kartu.
+
+> ⚠️ **Hostinger shared hosting / public_html TIDAK bisa** menjalankan aplikasi ini
+> (itu untuk PHP/WordPress). Pakai PythonAnywhere (gratis) atau VPS.
+
+---
+
+## ⭐ PythonAnywhere (GRATIS, tanpa kartu kredit)
+
+Cara termudah online tanpa bayar & tanpa kartu. Dapat link `namaanda.pythonanywhere.com`.
+
+1. **Daftar** di **https://www.pythonanywhere.com** → pilih akun **Beginner (Free)**.
+2. Buka tab **Consoles** → **Bash**. Ambil kode:
+   ```bash
+   git clone https://github.com/attahillah085-gif/data_kelas.git
+   cd data_kelas
+   python3.11 -m venv .venv
+   .venv/bin/pip install -r requirements.txt
+   ```
+3. Buka tab **Web** → **Add a new web app** → **Manual configuration** → **Python 3.11**.
+4. Di halaman konfigurasi web, isi:
+   - **Source code:** `/home/NAMAANDA/data_kelas`
+   - **Working directory:** `/home/NAMAANDA/data_kelas`
+   - **Virtualenv:** `/home/NAMAANDA/data_kelas/.venv`
+   *(ganti `NAMAANDA` dengan username PythonAnywhere Anda)*
+5. Klik link file **WSGI configuration**, hapus isinya, ganti dengan:
+   ```python
+   import os, sys
+   path = '/home/NAMAANDA/data_kelas'
+   if path not in sys.path:
+       sys.path.insert(0, path)
+   os.environ['SECRET_KEY'] = 'GANTI-dengan-teks-acak-panjang'
+   os.environ['COOKIE_SECURE'] = '1'
+   from app import create_app
+   application = create_app()
+   ```
+6. Di bagian **Static files**, tambahkan: URL `/static/` → Directory `/home/NAMAANDA/data_kelas/app/static`.
+7. Klik tombol hijau **Reload**. Buka `https://NAMAANDA.pythonanywhere.com`.
+   → Halaman **Setup** muncul → buat akun **pengelola** pertama. Selesai! 🎉
+
+**Update ke versi terbaru nanti:** di console Bash →
+```bash
+cd data_kelas && git pull && .venv/bin/pip install -r requirements.txt
+```
+lalu klik **Reload** di tab Web. (Data Anda aman — tidak terhapus.)
+
+> Catatan paket gratis: 1 web app, kuota CPU harian wajar untuk toko kecil, dan
+> app perlu di-"Run until 3 months" (klik tombol perpanjang tiap 3 bulan di tab Web).
+> Domain sendiri (mis. thegirlhouse.com) tersedia di paket berbayar.
 
 ---
 

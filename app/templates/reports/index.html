@@ -25,6 +25,22 @@
   <div class="card kpi"><div class="top"><span class="kpi-ico ico-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></span><span class="label">Omzet Toko</span></div><div class="value sm">{{ store_revenue|rupiah }}</div><div class="foot">{{ order_count }} pesanan dibayar</div></div>
 </div>
 
+<!-- Target & saldo kas -->
+<div class="grid g-2 mt-16">
+  <div class="card card-pad">
+    <div class="row-between mb-8"><strong>🎯 Target Omzet{% if target_period %} · {{ target_period }}{% endif %}</strong>{% if target %}<span class="badge {{ 'b-green' if target_pct>=100 else 'b-amber' }}">{{ target_pct }}%</span>{% endif %}</div>
+    {% if target %}
+    <div class="progress" style="height:12px"><span style="width:{{ target_pct }}%"></span></div>
+    <div class="row-between mt-8" style="font-size:.86rem"><span class="fw-700">{{ target_income|rupiah }}</span><span class="text-soft">dari target {{ target|rupiah }}</span></div>
+    {% else %}<p class="text-muted" style="margin:6px 0 0;font-size:.86rem">Belum ada target omzet. Atur di <a href="{{ url_for('main.settings') }}">Pengaturan</a>.</p>{% endif %}
+  </div>
+  <div class="card kpi">
+    <div class="top"><span class="kpi-ico {{ 'ico-green' if cash_balance>=0 else 'ico-red' }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span><span class="label">Saldo Kas Berjalan</span></div>
+    <div class="value sm {{ 'text-green' if cash_balance>=0 else 'text-red' }}">{{ cash_balance|rupiah }}</div>
+    <div class="foot">akumulasi laba semua periode</div>
+  </div>
+</div>
+
 <!-- Tren per periode -->
 <div class="grid cols-main mt-16">
   <div class="card">
@@ -82,12 +98,12 @@
     <div class="card-head"><h3>Rekap per Periode</h3></div>
     <div class="table-wrap">
       <table class="tbl">
-        <thead><tr><th>Periode</th><th class="num">Masuk</th><th class="num">Keluar</th><th class="num">Laba</th></tr></thead>
+        <thead><tr><th>Periode</th><th class="num">Masuk</th><th class="num">Keluar</th><th class="num">Laba</th><th class="num">Saldo</th></tr></thead>
         <tbody>
           {% for d in trend %}
-          <tr><td class="fw-700">{{ d.name }}</td><td class="num text-green">{{ d.income|rupiah }}</td><td class="num text-red">{{ d.expense|rupiah }}</td><td class="num fw-700 {{ 'text-green' if d.profit>=0 else 'text-red' }}">{{ d.profit|rupiah }}</td></tr>
+          <tr><td class="fw-700">{{ d.name }}</td><td class="num text-green">{{ d.income|rupiah }}</td><td class="num text-red">{{ d.expense|rupiah }}</td><td class="num fw-700 {{ 'text-green' if d.profit>=0 else 'text-red' }}">{{ d.profit|rupiah }}</td><td class="num {{ 'text-green' if d.balance>=0 else 'text-red' }}">{{ d.balance|rupiah }}</td></tr>
           {% else %}
-          <tr><td colspan="4" class="empty" style="padding:26px">Belum ada periode.</td></tr>
+          <tr><td colspan="5" class="empty" style="padding:26px">Belum ada periode.</td></tr>
           {% endfor %}
         </tbody>
       </table>

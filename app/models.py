@@ -168,6 +168,9 @@ class Setting(db.Model):
     # Ambang notifikasi stok menipis
     low_stock_threshold = db.Column(db.Integer, default=3)
 
+    # Target omzet (pemasukan) per periode
+    monthly_target = db.Column(db.Integer, default=0)
+
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     @staticmethod

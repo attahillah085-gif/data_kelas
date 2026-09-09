@@ -190,6 +190,10 @@ def settings():
             s.low_stock_threshold = max(int(request.form.get("low_stock_threshold") or 0), 0)
         except ValueError:
             pass
+        try:
+            s.monthly_target = max(int(float(request.form.get("monthly_target") or 0)), 0)
+        except ValueError:
+            pass
         db.session.commit()
         flash("Pengaturan disimpan.", "success")
         return redirect(url_for("main.settings"))

@@ -28,7 +28,10 @@
           <div class="field"><label>Nomor WhatsApp</label><input name="whatsapp_number" value="{{ s.whatsapp_number }}" placeholder="628123456789"><span class="hint">Format 62… (untuk tombol checkout).</span></div>
           <div class="field"><label>Ongkir flat <span class="text-soft">(opsional)</span></label><input type="number" name="shipping_fee" min="0" value="{{ s.shipping_fee }}"></div>
         </div>
-        <div class="field"><label>Ambang notifikasi stok menipis</label><input type="number" name="low_stock_threshold" min="0" value="{{ s.low_stock_threshold }}"><span class="hint">Pengelola diberi tahu saat stok ≤ angka ini setelah penjualan.</span></div>
+        <div class="form-row">
+          <div class="field"><label>Ambang notifikasi stok menipis</label><input type="number" name="low_stock_threshold" min="0" value="{{ s.low_stock_threshold }}"><span class="hint">Pengelola diberi tahu saat stok ≤ angka ini.</span></div>
+          <div class="field"><label>Target omzet per periode</label><input type="number" name="monthly_target" min="0" value="{{ s.monthly_target }}"><span class="hint">Dipakai di Laporan untuk progres target.</span></div>
+        </div>
         <div class="field"><label>Deskripsi toko</label><textarea name="shop_description" placeholder="Deskripsi singkat toko">{{ s.shop_description }}</textarea></div>
         <div class="field"><label>Judul hero (banner)</label><input name="hero_headline" value="{{ s.hero_headline }}" placeholder="mis. Gaya Keren, Harga Bersahabat"></div>
         <div class="field"><label>Subjudul hero</label><input name="hero_subtext" value="{{ s.hero_subtext }}"></div>

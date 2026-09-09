@@ -32,12 +32,25 @@ def _counted_orders_filter(q):
 @bp.route("/")
 @login_required
 def index():
+    from .models import Setting
+    setting = Setting.get()
     periods = Period.query.order_by(Period.start_date.asc(), Period.id.asc()).all()
 
-    # Tren per periode
-    trend = [{"name": p.name, "income": p.total_income,
-              "expense": p.total_expense, "profit": p.net_profit} for p in periods]
+    # Tren per periode + saldo kas berjalan (kumulatif laba)
+    trend = []
+    running = 0
+    for p in periods:
+        running += p.net_profit
+        trend.append({"name": p.name, "income": p.total_income,
+                      "expense": p.total_expense, "profit": p.net_profit, "balance": running})
     trend_max = max([max(t["income"], t["expense"]) for t in trend], default=0) or 1
+    cash_balance = running
+
+    # Target omzet: bandingkan dengan periode terbuka terbaru (atau periode terakhir)
+    target = setting.monthly_target or 0
+    cur = next((p for p in reversed(periods) if p.is_open), None) or (periods[-1] if periods else None)
+    target_income = cur.total_income if cur else 0
+    target_pct = min(round(target_income / target * 100), 100) if target else 0
 
     # Ringkasan keseluruhan
     total_income = db.session.query(func.coalesce(func.sum(Transaction.amount), 0)).filter(
@@ -85,6 +98,8 @@ def index():
         top_products=top_products, top_max=top_max,
         cat_rows=cat_rows, cat_max=cat_max,
         product_count=Product.query.count(),
+        target=target, target_income=target_income, target_pct=target_pct,
+        target_period=cur.name if cur else "", cash_balance=cash_balance,
     )
 
 
