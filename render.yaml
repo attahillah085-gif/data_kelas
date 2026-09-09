@@ -14,6 +14,8 @@ services:
         fromDatabase:
           name: girlhouse-db
           property: connectionString
+      - key: COOKIE_SECURE
+        value: "1"
       - key: VAPID_SUBJECT
         value: mailto:admin@thegirlhouse.id
       # Untuk notifikasi push (opsional), isi 2 nilai di bawah lewat dashboard Render

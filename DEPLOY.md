@@ -73,6 +73,31 @@ kecil). Untuk skala besar, pasang PostgreSQL lalu isi `DATABASE_URL` di `.env` d
 > Catatan: paket gratis Render "tidur" saat tidak ada pengunjung, jadi kunjungan pertama
 > setelah idle agak lambat (~30 detik). Naik ke paket berbayar untuk selalu aktif.
 
+### 🌐 Pakai domain Hostinger Anda di Render
+
+Sudah punya domain di Hostinger? Pakai untuk aplikasi ini (lebih profesional daripada
+`*.onrender.com`). Disarankan memakai **subdomain**, mis. `app.domain-anda.com`.
+
+1. Di **Render** → buka service **the-girl-house** → **Settings** → **Custom Domains**
+   → **Add Custom Domain** → ketik `app.domain-anda.com` → Render menampilkan **nilai CNAME**
+   (mis. `the-girl-house.onrender.com`).
+2. Di **Hostinger hPanel** → **Domains** → pilih domain → **DNS / Name Servers** → **DNS Zone**
+   → **Manage** → tambah record:
+   - **Type:** `CNAME`
+   - **Name/Host:** `app`
+   - **Target/Value:** `the-girl-house.onrender.com` (nilai dari Render tadi)
+   - **TTL:** biarkan default
+3. Simpan. Tunggu 5–30 menit (propagasi DNS). Render otomatis memasang **HTTPS gratis**.
+   Selesai — buka `https://app.domain-anda.com` 🎉
+
+> **Ingin pakai domain utama tanpa `app.` (mis. `domain-anda.com`)?** Render akan memberi
+> **A record** (alamat IP) untuk domain utama — tambahkan sebagai record `A` dengan Name `@`
+> di DNS Zone Hostinger. Subdomain (CNAME) lebih mudah, jadi disarankan itu dulu.
+
+> **Catatan penting (paket gratis):** database Postgres gratis Render **kadaluarsa setelah
+> 90 hari**. Sebelum itu, upgrade database ke paket berbayar agar **data tidak hilang**.
+> Untuk bisnis yang sudah jalan, pertimbangkan langsung paket berbayar (~$7/bln).
+
 ---
 
 ## ✅ Alternatif — Railway

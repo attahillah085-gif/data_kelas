@@ -44,6 +44,12 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = _engine_options(SQLALCHEMY_DATABASE_URI)
 
+    # Keamanan cookie session
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"
+    # Set COOKIE_SECURE=1 di produksi (HTTPS) agar cookie hanya lewat HTTPS.
+    SESSION_COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "").lower() in ("1", "true", "yes")
+
     # Identitas bisnis default (bisa diubah di halaman Pengaturan)
     APP_NAME = "The Girl House"
 
