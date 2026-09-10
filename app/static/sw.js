@@ -1,5 +1,5 @@
 /* The Girl House Service Worker */
-const CACHE = "thegirlhouse-v2";
+const CACHE = "thegirlhouse-v3";
 const APP_SHELL = [
   "/offline",
   "/static/css/style.css",

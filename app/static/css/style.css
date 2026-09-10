@@ -1,43 +1,43 @@
 /* =========================================================
    The Girl House — Design System
-   Tema: coklat mocha + dusty rose + krem (light & dark)
+   Tema: pink pastel soft + putih dominan (light & dark)
    ========================================================= */
 
 /* ---------- Tokens ---------- */
 :root {
-  --primary: #9b6a4f;        /* mocha coklat */
-  --primary-strong: #7c5038; /* coklat tua */
-  --primary-soft: #f3e6dd;   /* mocha muda */
+  --primary: #db6a9d;        /* rose pink — tombol & aksen utama */
+  --primary-strong: #c4548a; /* pink lebih dalam — hover/press */
+  --primary-soft: #fdecf3;   /* pink sangat muda — background aksen */
   --primary-contrast: #ffffff;
 
-  --rose: #c98b85;           /* dusty rose (aksen logo) */
-  --rose-soft: #f4e5e2;
+  --rose: #f3a9c6;           /* pink pastel lembut */
+  --rose-soft: #fdeff5;
 
-  --bg: #f7efe9;             /* krem */
-  --bg-grad: radial-gradient(1200px 600px at 100% -10%, #f0ddd0 0%, transparent 60%),
-             radial-gradient(900px 500px at -10% 10%, #f4e6de 0%, transparent 55%);
-  --surface: #fffaf6;        /* putih hangat */
-  --surface-2: #f5e9e1;
-  --surface-3: #eedcd1;
-  --border: #ecdccf;
-  --border-strong: #ddc6b6;
+  --bg: #fff8fb;             /* putih dominan (semburat pink tipis) */
+  --bg-grad: radial-gradient(1200px 600px at 100% -10%, #fde7f0 0%, transparent 60%),
+             radial-gradient(900px 500px at -10% 10%, #fdeef6 0%, transparent 55%);
+  --surface: #ffffff;        /* putih murni */
+  --surface-2: #fdf3f8;
+  --surface-3: #fbe9f1;
+  --border: #f6e2ec;
+  --border-strong: #efccde;
 
-  --text: #3f2c22;           /* coklat gelap */
-  --text-muted: #8a6f61;
-  --text-soft: #ab9284;
+  --text: #4a2f3d;           /* plum gelap lembut */
+  --text-muted: #9a7183;
+  --text-soft: #bd96a8;
 
   --success: #4b9b6e;  --success-soft: #dcefe3;
-  --danger: #c0544f;   --danger-soft: #f6e0dd;
-  --warning: #bf8a3a;  --warning-soft: #f6e9d3;
-  --info: #9b6a4f;     --info-soft: #f3e6dd;
-  --purple: #b07d8f;   --purple-soft: #f2e5ea;   /* rose-ungu */
+  --danger: #d3556f;   --danger-soft: #fbe3e8;
+  --warning: #d59433;  --warning-soft: #f8ecd6;
+  --info: #db6a9d;     --info-soft: #fdecf3;
+  --purple: #b57bb0;   --purple-soft: #f4e7f3;   /* pink-ungu */
 
   --radius: 18px;
   --radius-sm: 12px;
   --radius-lg: 26px;
-  --shadow: 0 1px 2px rgba(80,50,35,.04), 0 10px 30px rgba(90,60,40,.07);
-  --shadow-lg: 0 18px 48px rgba(90,60,40,.16);
-  --ring: 0 0 0 4px rgba(155,106,79,.18);
+  --shadow: 0 1px 2px rgba(180,80,120,.05), 0 10px 30px rgba(190,90,130,.08);
+  --shadow-lg: 0 18px 48px rgba(190,90,130,.16);
+  --ring: 0 0 0 4px rgba(219,106,157,.20);
 
   --sidebar-w: 256px;
   --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -45,39 +45,40 @@
 }
 
 :root[data-theme="dark"] {
-  --primary: #d7a488;        /* mocha terang */
-  --primary-strong: #c08a6a;
-  --primary-soft: rgba(215,164,136,.16);
-  --primary-contrast: #241812;
+  --primary: #f0a0c2;        /* pink terang */
+  --primary-strong: #e888b0;
+  --primary-soft: rgba(240,160,194,.16);
+  --primary-contrast: #2a1720;
 
-  --rose: #d9a6a0;
-  --rose-soft: rgba(217,166,160,.16);
+  --rose: #f4b8d0;
+  --rose-soft: rgba(244,184,208,.16);
 
-  --bg: #211611;             /* espresso */
-  --bg-grad: radial-gradient(1100px 600px at 100% -10%, rgba(215,164,136,.14) 0%, transparent 60%),
-             radial-gradient(800px 500px at -10% 5%, rgba(201,139,133,.10) 0%, transparent 55%);
-  --surface: #2c1f18;
-  --surface-2: #34251d;
-  --surface-3: #3f2e25;
-  --border: #45332a;
-  --border-strong: #56412f;
+  --bg: #1d1319;             /* plum gelap */
+  --bg-grad: radial-gradient(1100px 600px at 100% -10%, rgba(240,160,194,.14) 0%, transparent 60%),
+             radial-gradient(800px 500px at -10% 5%, rgba(243,169,198,.10) 0%, transparent 55%);
+  --surface: #281a22;
+  --surface-2: #31212a;
+  --surface-3: #3d2a34;
+  --border: #45303b;
+  --border-strong: #573c49;
 
-  --text: #f3e7df;
-  --text-muted: #c5ab9c;
-  --text-soft: #9a8171;
+  --text: #f6e6ee;
+  --text-muted: #cba9ba;
+  --text-soft: #9a7d8b;
 
   --success: #5cc08e;  --success-soft: rgba(92,192,142,.15);
-  --danger: #e08a84;   --danger-soft: rgba(224,138,132,.16);
+  --danger: #e88a9c;   --danger-soft: rgba(232,138,156,.16);
   --warning: #e0b463;  --warning-soft: rgba(224,180,99,.15);
-  --info: #d7a488;     --info-soft: rgba(215,164,136,.14);
-  --purple: #d9a6b6;   --purple-soft: rgba(217,166,182,.16);
+  --info: #f0a0c2;     --info-soft: rgba(240,160,194,.14);
+  --purple: #d9a6d3;   --purple-soft: rgba(217,166,211,.16);
 
   --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.4);
   --shadow-lg: 0 16px 50px rgba(0,0,0,.55);
-  --ring: 0 0 0 3px rgba(215,164,136,.3);
+  --ring: 0 0 0 3px rgba(240,160,194,.3);
 }
 
 * { box-sizing: border-box; }
+input[type="checkbox"], input[type="radio"] { accent-color: var(--primary); }
 html, body { height: 100%; }
 body {
   margin: 0;
@@ -400,7 +401,7 @@ dialog::backdrop { background: rgba(15,23,42,.45); backdrop-filter: blur(3px); }
 
 /* ---------- Auth pages ---------- */
 .auth-wrap { min-height: 100vh; display: grid; grid-template-columns: 1.1fr 1fr; }
-.auth-hero { background: linear-gradient(150deg, #6e4634 0%, #9b6a4f 48%, #c98b85 100%);
+.auth-hero { background: linear-gradient(150deg, #c4548a 0%, #db6a9d 48%, #f3a9c6 100%);
   color: #fff; padding: 48px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
 .auth-hero::after { content:""; position: absolute; inset: 0;
   background: radial-gradient(600px 300px at 80% 10%, rgba(255,255,255,.18), transparent 60%),

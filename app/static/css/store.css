@@ -29,7 +29,7 @@ body.store { background: var(--bg); }
 /* ---------- Hero ---------- */
 .hero { position: relative; overflow: hidden; margin-bottom: 8px;
   background:
-    linear-gradient(120deg, rgba(110,70,52,.94), rgba(201,139,133,.86)),
+    linear-gradient(120deg, rgba(196,84,138,.92), rgba(243,169,198,.82)),
     var(--hero-img, none); background-size: cover; background-position: center; }
 .hero::after { content:""; position:absolute; inset:0;
   background: radial-gradient(700px 340px at 82% 8%, rgba(255,255,255,.20), transparent 60%); }
@@ -40,7 +40,7 @@ body.store { background: var(--bg); }
 .hero-text h1 { font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1.05; font-weight: 900; margin: 0 0 14px; letter-spacing: -.02em; }
 .hero-text p { font-size: 1.08rem; color: rgba(255,255,255,.9); margin: 0 0 26px; max-width: 500px; }
 .hero .btn-primary { background: #fff; color: var(--primary-strong); }
-.hero .btn-primary:hover { background: #eaf1ff; }
+.hero .btn-primary:hover { background: #fdeff5; }
 
 /* ---------- Category chips ---------- */
 .cat-chips { display: flex; gap: 9px; overflow-x: auto; padding: 20px 0 6px; scrollbar-width: none; }
@@ -188,7 +188,7 @@ body.store { background: var(--bg); }
 .wish-btn.on svg { fill: var(--rose); }
 
 /* ---------- Bintang rating ---------- */
-.stars { color: #d9c6b6; font-size: .9rem; letter-spacing: 1px; white-space: nowrap; }
+.stars { color: #edccdb; font-size: .9rem; letter-spacing: 1px; white-space: nowrap; }
 .stars .on { color: #e0a72e; }
 .stars-lg { font-size: 1.15rem; }
 .pcard-rating { display: flex; align-items: center; gap: 6px; font-size: .8rem; }
@@ -197,7 +197,7 @@ body.store { background: var(--bg); }
 
 .rating-input { display: inline-flex; flex-direction: row-reverse; justify-content: flex-end; font-size: 1.8rem; gap: 3px; }
 .rating-input input { position: absolute; opacity: 0; width: 0; height: 0; }
-.rating-input label { color: #d9c6b6; cursor: pointer; transition: color .1s; }
+.rating-input label { color: #edccdb; cursor: pointer; transition: color .1s; }
 .rating-input label:hover, .rating-input label:hover ~ label, .rating-input input:checked ~ label { color: #e0a72e; }
 
 /* ---------- Filter bar ---------- */
