@@ -53,6 +53,14 @@ def create_app(config_object: type = Config) -> Flask:
     app = Flask(__name__, instance_relative_config=False)
     app.config.from_object(config_object)
 
+    # Di belakang reverse-proxy (Caddy/Nginx): hormati header X-Forwarded-*
+    # agar url_for(_external), redirect, sitemap & Open Graph memakai https + host benar.
+    try:
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
+    except Exception:
+        pass
+
     db.init_app(app)
     login_manager.init_app(app)
     register_filters(app)
