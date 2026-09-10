@@ -131,6 +131,9 @@ def _register_context(app: Flask) -> None:
         brand_logo = _detect_logo()
         try:
             setting = Setting.get()
+            # Logo unggahan (dari Pengaturan) diprioritaskan; jika kosong pakai file bawaan.
+            if setting and getattr(setting, "logo_path", ""):
+                brand_logo = setting.logo_path
             if current_user.is_authenticated:
                 unread = Notification.query.filter_by(
                     user_id=current_user.id, is_read=False

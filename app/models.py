@@ -145,6 +145,7 @@ class Setting(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     business_name = db.Column(db.String(120), default="The Girl House")
     tagline = db.Column(db.String(200), default="Manajemen Bisnis Thrifting")
+    logo_path = db.Column(db.String(255), default="")   # logo unggahan (tersimpan di volume uploads)
     currency_symbol = db.Column(db.String(8), default="Rp")
     # Porsi laba yang ditahan bisnis/owner sebelum sisanya dibagi ke investor (%)
     owner_share_percent = db.Column(db.Integer, default=30)

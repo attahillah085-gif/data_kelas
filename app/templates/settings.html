@@ -7,10 +7,21 @@
 <div class="grid cols-main">
   <div class="card">
     <div class="card-head"><h3>Profil Bisnis</h3></div>
-    <form method="post" action="{{ url_for('main.settings') }}">
+    <form method="post" action="{{ url_for('main.settings') }}" enctype="multipart/form-data">
       <div class="card-body">
         <div class="field"><label>Nama bisnis</label><input name="business_name" value="{{ s.business_name }}" required></div>
         <div class="field"><label>Tagline</label><input name="tagline" value="{{ s.tagline }}" placeholder="mis. Thrift berkualitas harga bersahabat"></div>
+        <div class="field">
+          <label>Logo toko</label>
+          {% if s.logo_path %}
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px">
+            <img src="{{ s.logo_path }}" alt="Logo" style="height:56px;width:auto;max-width:180px;object-fit:contain;background:#fff;border:1px solid var(--border);border-radius:12px;padding:6px">
+            <label style="display:inline-flex;align-items:center;gap:6px;font-weight:500;color:var(--danger)"><input type="checkbox" name="logo_remove" value="1"> Hapus logo</label>
+          </div>
+          {% endif %}
+          <input type="file" name="logo" accept="image/png,image/jpeg,image/webp">
+          <span class="hint">PNG/JPG/WEBP. Disarankan latar transparan (PNG), sisi memanjang. Tampil di header toko & halaman login.</span>
+        </div>
         <div class="form-row">
           <div class="field"><label>Simbol mata uang</label><input name="currency_symbol" value="{{ s.currency_symbol }}"></div>
           <div class="field">
