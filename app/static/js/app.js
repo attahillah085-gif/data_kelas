@@ -50,9 +50,23 @@
   var sidebar = document.getElementById("sidebar");
   var backdrop = document.getElementById("backdrop");
   var menuBtn = document.getElementById("menuBtn");
-  function closeDrawer() { if (sidebar) sidebar.classList.remove("open"); if (backdrop) backdrop.classList.remove("show"); }
+  function syncDrawer() {
+    var open = sidebar && sidebar.classList.contains("open");
+    document.body.classList.toggle("drawer-open", !!open);
+  }
+  function closeDrawer() {
+    if (sidebar) sidebar.classList.remove("open");
+    if (backdrop) backdrop.classList.remove("show");
+    document.body.classList.remove("drawer-open");
+  }
+  function openDrawer() {
+    if (sidebar) sidebar.classList.add("open");
+    if (backdrop) backdrop.classList.add("show");
+    document.body.classList.add("drawer-open");
+    if (sidebar) sidebar.scrollTop = 0;
+  }
   if (menuBtn) menuBtn.addEventListener("click", function () {
-    sidebar.classList.toggle("open"); backdrop.classList.toggle("show");
+    sidebar.classList.toggle("open"); backdrop.classList.toggle("show"); syncDrawer();
   });
   if (backdrop) backdrop.addEventListener("click", closeDrawer);
 
@@ -189,10 +203,7 @@
 
   /* ---------- Bottom-nav "Menu" membuka sidebar penuh ---------- */
   var bottomMenuBtn = document.getElementById("bottomMenuBtn");
-  if (bottomMenuBtn) bottomMenuBtn.addEventListener("click", function () {
-    if (sidebar) sidebar.classList.add("open");
-    if (backdrop) backdrop.classList.add("show");
-  });
+  if (bottomMenuBtn) bottomMenuBtn.addEventListener("click", openDrawer);
 
   function urlB64ToUint8Array(base64String) {
     var padding = "=".repeat((4 - (base64String.length % 4)) % 4);
