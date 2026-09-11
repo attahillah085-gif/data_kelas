@@ -11,6 +11,7 @@ from sqlalchemy import func
 
 from .extensions import db
 from .models import (
+    CAPITAL_CATEGORIES,
     EXPENSE,
     INCOME,
     ORDER_COUNTED,
@@ -36,11 +37,11 @@ def index():
     setting = Setting.get()
     periods = Period.query.order_by(Period.start_date.asc(), Period.id.asc()).all()
 
-    # Tren per periode + saldo kas berjalan (kumulatif laba)
+    # Tren per periode + saldo kas berjalan (kas = modal + laba)
     trend = []
     running = 0
     for p in periods:
-        running += p.net_profit
+        running += p.cash_flow
         trend.append({"name": p.name, "income": p.total_income,
                       "expense": p.total_expense, "profit": p.net_profit, "balance": running})
     trend_max = max([max(t["income"], t["expense"]) for t in trend], default=0) or 1
@@ -52,9 +53,11 @@ def index():
     target_income = cur.total_income if cur else 0
     target_pct = min(round(target_income / target * 100), 100) if target else 0
 
-    # Ringkasan keseluruhan
+    # Ringkasan keseluruhan (pemasukan usaha TIDAK termasuk setoran modal)
     total_income = db.session.query(func.coalesce(func.sum(Transaction.amount), 0)).filter(
-        Transaction.kind == INCOME).scalar() or 0
+        Transaction.kind == INCOME, Transaction.category.notin_(CAPITAL_CATEGORIES)).scalar() or 0
+    total_capital = db.session.query(func.coalesce(func.sum(Transaction.amount), 0)).filter(
+        Transaction.kind == INCOME, Transaction.category.in_(CAPITAL_CATEGORIES)).scalar() or 0
     total_expense = db.session.query(func.coalesce(func.sum(Transaction.amount), 0)).filter(
         Transaction.kind == EXPENSE).scalar() or 0
     net = total_income - total_expense
@@ -94,6 +97,7 @@ def index():
         "reports/index.html",
         trend=trend, trend_max=trend_max,
         total_income=total_income, total_expense=total_expense, net=net,
+        total_capital=total_capital,
         order_count=order_count, store_revenue=store_revenue,
         top_products=top_products, top_max=top_max,
         cat_rows=cat_rows, cat_max=cat_max,

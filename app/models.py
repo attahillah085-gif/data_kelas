@@ -32,6 +32,8 @@ EXPENSE = "EXPENSE"
 
 # Kategori bawaan (dipakai untuk dropdown; kategori bebas tetap boleh)
 INCOME_CATEGORIES = ["Penjualan", "Setoran Modal", "Pendapatan Lain"]
+# Kategori pemasukan yang berupa MODAL (bukan pendapatan usaha) — tidak dihitung ke laba.
+CAPITAL_CATEGORIES = ["Setoran Modal"]
 EXPENSE_CATEGORIES = [
     "Kulakan / Beli Stok",
     "Operasional",
@@ -208,7 +210,15 @@ class Period(db.Model):
 
     @property
     def total_income(self) -> int:
-        return sum(t.amount for t in self.transactions if t.kind == INCOME)
+        # Pendapatan USAHA saja (Penjualan, Pendapatan Lain) — TANPA setoran modal.
+        return sum(t.amount for t in self.transactions
+                   if t.kind == INCOME and t.category not in CAPITAL_CATEGORIES)
+
+    @property
+    def total_capital(self) -> int:
+        # Setoran modal: masuk ke kas, TAPI bukan pendapatan/laba usaha.
+        return sum(t.amount for t in self.transactions
+                   if t.kind == INCOME and t.category in CAPITAL_CATEGORIES)
 
     @property
     def total_expense(self) -> int:
@@ -216,7 +226,13 @@ class Period(db.Model):
 
     @property
     def net_profit(self) -> int:
+        # Laba bersih = pendapatan usaha - pengeluaran (modal tidak dihitung).
         return self.total_income - self.total_expense
+
+    @property
+    def cash_flow(self) -> int:
+        # Perubahan kas periode = modal masuk + laba bersih.
+        return self.total_capital + self.net_profit
 
     def __repr__(self) -> str:  # pragma: no cover
         return f"<Period {self.name}>"

@@ -37,7 +37,7 @@
   <div class="card kpi">
     <div class="top"><span class="kpi-ico {{ 'ico-green' if cash_balance>=0 else 'ico-red' }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span><span class="label">Saldo Kas Berjalan</span></div>
     <div class="value sm {{ 'text-green' if cash_balance>=0 else 'text-red' }}">{{ cash_balance|rupiah }}</div>
-    <div class="foot">akumulasi laba semua periode</div>
+    <div class="foot">akumulasi modal + laba semua periode</div>
   </div>
 </div>
 

@@ -53,10 +53,11 @@
 
 {% if selected %}
 <!-- Ringkasan -->
-<div class="grid g-3 mb-16">
-  <div class="card kpi"><div class="top"><span class="kpi-ico ico-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span><span class="label">Total Pemasukan</span></div><div class="value">{{ selected.total_income|rupiah }}</div></div>
+<div class="grid g-4 mb-16">
+  <div class="card kpi"><div class="top"><span class="kpi-ico ico-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span><span class="label">Pemasukan Usaha</span></div><div class="value">{{ selected.total_income|rupiah }}</div><div class="foot">penjualan &amp; pendapatan lain (tanpa modal)</div></div>
   <div class="card kpi"><div class="top"><span class="kpi-ico ico-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg></span><span class="label">Total Pengeluaran</span></div><div class="value">{{ selected.total_expense|rupiah }}</div></div>
-  <div class="card kpi"><div class="top"><span class="kpi-ico {{ 'ico-blue' if selected.net_profit>=0 else 'ico-amber' }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span><span class="label">Laba Bersih</span></div><div class="value {{ 'text-green' if selected.net_profit>0 else 'text-red' if selected.net_profit<0 }}">{{ selected.net_profit|rupiah }}</div></div>
+  <div class="card kpi"><div class="top"><span class="kpi-ico {{ 'ico-blue' if selected.net_profit>=0 else 'ico-amber' }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span><span class="label">Laba Bersih</span></div><div class="value {{ 'text-green' if selected.net_profit>0 else 'text-red' if selected.net_profit<0 }}">{{ selected.net_profit|rupiah }}</div><div class="foot">pemasukan usaha − pengeluaran</div></div>
+  <div class="card kpi"><div class="top"><span class="kpi-ico ico-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span><span class="label">Modal Masuk</span></div><div class="value">{{ selected.total_capital|rupiah }}</div><div class="foot">setoran modal — bukan laba</div></div>
 </div>
 
 <!-- Transaksi -->
