@@ -253,7 +253,7 @@ def _register_pwa(app: Flask) -> None:
             ]
         data = {
             "name": f"{name} — Manajemen", "short_name": name[:20], "id": "/",
-            "start_url": "/", "scope": "/", "display": "standalone",
+            "start_url": "/dashboard", "scope": "/", "display": "standalone",
             "orientation": "portrait-primary",
             "background_color": "#fff8fb", "theme_color": "#db6a9d", "lang": "id",
             "categories": ["business", "finance", "productivity"],
