@@ -490,3 +490,78 @@ input:hover, select:hover, textarea:hover { border-color: var(--border-strong); 
 [hidden] { display: none !important; }
 .only-desktop { }
 @media (max-width: 640px){ .hide-sm { display: none !important; } .kpi .value { font-size: 1.3rem; } }
+
+/* =========================================================
+   MOBILE / HP — nyaman & bebas bug (install iOS, bottom-nav,
+   anti-zoom input, safe-area iPhone, layout ringkas)
+   ========================================================= */
+
+/* Cegah geser horizontal tak sengaja + elemen lebar aman */
+html, body { overflow-x: hidden; }
+.table-wrap, .barchart { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* Tombol "Pasang Aplikasi" di sidebar */
+.install-cta {
+  display: flex; align-items: center; gap: 10px; width: 100%; margin-bottom: 8px;
+  padding: 11px 12px; border-radius: 12px; cursor: pointer;
+  border: 1px solid var(--primary); background: var(--primary-soft);
+  color: var(--primary-strong); font-weight: 700; font-size: .9rem; font-family: inherit;
+}
+.install-cta svg { width: 18px; height: 18px; }
+.install-cta:hover { background: color-mix(in srgb, var(--primary) 16%, #fff); }
+
+/* Navigasi bawah — hanya HP */
+.bottom-nav { display: none; }
+
+@media (max-width: 900px) {
+  /* Anti-zoom saat fokus input di iOS: font control minimal 16px */
+  input, select, textarea, .btn, .input { font-size: 16px; }
+
+  /* Safe-area iPhone (notch atas) untuk topbar */
+  .topbar { padding-top: calc(12px + env(safe-area-inset-top)); position: sticky; top: 0; z-index: 30;
+    background: color-mix(in srgb, var(--bg) 86%, transparent); backdrop-filter: saturate(1.4) blur(8px); }
+
+  /* Kartu KPI lebih ringkas di HP (biar tak kebanyakan scroll) */
+  .kpi { padding: 14px 16px; }
+  .kpi .value { font-size: 1.35rem; }
+  .card-pad, .card-body { }
+
+  /* Bottom nav tampil */
+  .bottom-nav {
+    display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+    background: var(--surface); border-top: 1px solid var(--border);
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+    box-shadow: 0 -6px 22px rgba(190,90,130,.12);
+  }
+  .bottom-nav .bn {
+    flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    background: none; border: 0; cursor: pointer; text-decoration: none;
+    color: var(--text-soft); font-size: .66rem; font-weight: 700; font-family: inherit;
+    padding: 5px 2px; min-height: 52px; border-radius: 12px; transition: color .15s;
+  }
+  .bottom-nav .bn svg { width: 22px; height: 22px; }
+  .bottom-nav .bn span { line-height: 1; }
+  .bottom-nav .bn.on { color: var(--primary); }
+  .bottom-nav .bn.on svg { stroke: var(--primary); }
+  .bottom-nav .bn:active { transform: scale(.94); }
+
+  /* Ruang bawah agar konten tak tertutup bottom-nav */
+  .content { padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
+
+  /* Target sentuh lebih empuk */
+  .icon-btn { width: 42px; height: 42px; }
+  .nav-item { padding-top: 12px; padding-bottom: 12px; }
+}
+
+/* Modal panduan pasang iPhone */
+.ios-install {
+  border: none; border-radius: 20px; padding: 18px; max-width: 420px; width: calc(100% - 32px);
+  background: var(--surface); color: var(--text); box-shadow: var(--shadow-lg);
+}
+.ios-install::backdrop { background: rgba(30,15,25,.5); }
+.ios-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.ios-head strong { font-size: 1.05rem; }
+.ios-steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 9px; font-size: .92rem; line-height: 1.4; }
+.ios-steps b { color: var(--primary-strong); }
+.ios-share { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 6px;
+  background: var(--primary-soft); color: var(--primary-strong); font-weight: 800; }

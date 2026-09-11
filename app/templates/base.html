@@ -106,6 +106,10 @@
 
     <div class="sidebar-foot">
       {% if current_user.is_authenticated %}
+      <button type="button" class="install-cta" id="installMenuItem" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>
+        <span>Pasang Aplikasi</span>
+      </button>
       <div class="flex" style="padding:8px">
         <div class="avatar sm">{{ current_user.initials }}</div>
         <div class="grow" style="min-width:0;flex:1">
@@ -191,6 +195,51 @@
     </main>
   </div>
 </div>
+
+{% if current_user.is_authenticated %}
+<!-- Navigasi bawah (HP) -->
+<nav class="bottom-nav" aria-label="Menu utama">
+  <a href="{{ url_for('main.dashboard') }}" class="bn {{ 'on' if request.endpoint=='main.dashboard' }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg>
+    <span>Beranda</span></a>
+  {% if current_user.can_manage %}
+  <a href="{{ url_for('finance.index') }}" class="bn {{ 'on' if bp=='finance' }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M16 15h2"/></svg>
+    <span>Keuangan</span></a>
+  <a href="{{ url_for('inventory.index') }}" class="bn {{ 'on' if bp=='inventory' }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
+    <span>Stok</span></a>
+  <a href="{{ url_for('catalog.orders') }}" class="bn {{ 'on' if request.endpoint in ['catalog.orders','catalog.order_detail'] }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+    <span>Pesanan</span></a>
+  {% else %}
+  <a href="{{ url_for('reports.index') }}" class="bn {{ 'on' if bp=='reports' }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="7"/><rect x="12" y="6" width="3" height="11"/><rect x="17" y="13" width="3" height="4"/></svg>
+    <span>Laporan</span></a>
+  <a href="{{ url_for('investors.index') }}" class="bn {{ 'on' if bp=='investors' }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+    <span>Investor</span></a>
+  {% endif %}
+  <button type="button" class="bn" id="bottomMenuBtn" aria-label="Menu lengkap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    <span>Menu</span></button>
+</nav>
+
+<!-- Panduan pasang di iPhone/iPad -->
+<dialog id="iosInstallModal" class="ios-install">
+  <div class="ios-head">
+    <strong>Pasang di iPhone/iPad</strong>
+    <button type="button" class="icon-btn btn-sm" id="iosClose" aria-label="Tutup" style="width:32px;height:32px">✕</button>
+  </div>
+  <p class="text-muted" style="font-size:.88rem;margin:0 0 12px">Di iPhone, pasang lewat <b>Safari</b> (bukan Chrome):</p>
+  <ol class="ios-steps">
+    <li>Tap tombol <b>Bagikan</b> <span class="ios-share">⬆︎</span> di bar bawah Safari</li>
+    <li>Gulir, pilih <b>Add to Home Screen</b> / <b>Ke Layar Utama</b></li>
+    <li>Tap <b>Add</b> — ikon The Girl House muncul di layar HP 🎉</li>
+  </ol>
+  <button type="button" class="btn btn-primary" id="iosOk" style="width:100%;margin-top:14px">Mengerti</button>
+</dialog>
+{% endif %}
 
 <!-- Toasts -->
 <div class="toasts" id="toasts">

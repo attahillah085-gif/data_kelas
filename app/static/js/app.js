@@ -134,6 +134,7 @@
   var installBanner = document.getElementById("installBanner");
   window.addEventListener("beforeinstallprompt", function (e) {
     e.preventDefault(); deferredPrompt = e;
+    showInstallItem();
     try { if (localStorage.getItem("tf-install-dismiss") === "1") return; } catch (er) {}
     if (installBanner) installBanner.classList.add("show");
   });
@@ -149,6 +150,37 @@
   if (installClose) installClose.addEventListener("click", function () {
     installBanner.classList.remove("show");
     try { localStorage.setItem("tf-install-dismiss", "1"); } catch (e) {}
+  });
+
+  /* ---------- Pasang aplikasi: menu item + panduan iOS ---------- */
+  var isStandalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var installItem = document.getElementById("installMenuItem");
+  var iosModal = document.getElementById("iosInstallModal");
+  function showInstallItem() { if (installItem && !isStandalone) installItem.hidden = false; }
+  // iPhone tak pernah memicu beforeinstallprompt → tetap tampilkan tombol (buka panduan)
+  if (isIOS && !isStandalone) showInstallItem();
+  function closeIos() { if (iosModal) { try { iosModal.close(); } catch (e) { iosModal.removeAttribute("open"); } } }
+  if (installItem) installItem.addEventListener("click", function () {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.finally(function () { deferredPrompt = null; installItem.hidden = true; });
+    } else if (iosModal && iosModal.showModal) {
+      iosModal.showModal();
+    } else if (iosModal) {
+      iosModal.setAttribute("open", "");
+    }
+  });
+  var iosClose = document.getElementById("iosClose");
+  var iosOk = document.getElementById("iosOk");
+  if (iosClose) iosClose.addEventListener("click", closeIos);
+  if (iosOk) iosOk.addEventListener("click", closeIos);
+
+  /* ---------- Bottom-nav "Menu" membuka sidebar penuh ---------- */
+  var bottomMenuBtn = document.getElementById("bottomMenuBtn");
+  if (bottomMenuBtn) bottomMenuBtn.addEventListener("click", function () {
+    if (sidebar) sidebar.classList.add("open");
+    if (backdrop) backdrop.classList.add("show");
   });
 
   function urlB64ToUint8Array(base64String) {

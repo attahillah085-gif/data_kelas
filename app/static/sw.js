@@ -1,5 +1,5 @@
 /* The Girl House Service Worker — Offline Level 1 (fokus manajemen) */
-const CACHE = "thegirlhouse-v4";
+const CACHE = "thegirlhouse-v5";
 const APP_SHELL = [
   "/offline",
   "/static/css/style.css",
