@@ -17,7 +17,7 @@
   <meta property="og:image" content="{% block og_image %}{{ (brand_logo or url_for('static', filename='icons/icon-512.png')) }}{% endblock %}">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="manifest" href="{{ url_for('manifest') }}">
-  <link rel="icon" href="{{ url_for('static', filename='icons/favicon.svg') }}">
+  <link rel="icon" href="{{ brand_logo or url_for('static', filename='icons/favicon.svg') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

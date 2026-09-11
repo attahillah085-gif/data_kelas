@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#1d1319" media="(prefers-color-scheme: dark)">
   <title>{% block title %}{{ setting.business_name if setting else 'ThriftFlow' }}{% endblock %}</title>
   <link rel="manifest" href="{{ url_for('manifest') }}">
-  <link rel="icon" href="{{ url_for('static', filename='icons/favicon.svg') }}">
+  <link rel="icon" href="{{ brand_logo or url_for('static', filename='icons/favicon.svg') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,7 +32,11 @@
   <aside class="sidebar" id="sidebar">
     <div class="brand">
       <div class="brand-logo">
+        {% if brand_logo %}
+        <img src="{{ brand_logo }}" alt="{{ setting.business_name if setting else 'Logo' }}" style="width:100%;height:100%;object-fit:contain;border-radius:inherit">
+        {% else %}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-3.5l-1-2h-7l-1 2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z"/><circle cx="12" cy="13" r="3.5"/></svg>
+        {% endif %}
       </div>
       <div>
         <div class="brand-name">{{ setting.business_name if setting else 'ThriftFlow' }}</div>
