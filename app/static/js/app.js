@@ -152,29 +152,40 @@
     try { localStorage.setItem("tf-install-dismiss", "1"); } catch (e) {}
   });
 
-  /* ---------- Pasang aplikasi: menu item + panduan iOS ---------- */
+  /* ---------- Pasang aplikasi: tombol + panduan (Android & iOS) ---------- */
   var isStandalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
   var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
   var installItem = document.getElementById("installMenuItem");
   var iosModal = document.getElementById("iosInstallModal");
+  var androidModal = document.getElementById("androidInstallModal");
   function showInstallItem() { if (installItem && !isStandalone) installItem.hidden = false; }
-  // iPhone tak pernah memicu beforeinstallprompt → tetap tampilkan tombol (buka panduan)
-  if (isIOS && !isStandalone) showInstallItem();
-  function closeIos() { if (iosModal) { try { iosModal.close(); } catch (e) { iosModal.removeAttribute("open"); } } }
+  function openDlg(d) { if (!d) return; try { d.showModal(); } catch (e) { d.setAttribute("open", ""); } }
+  function closeDlg(d) { if (!d) return; try { d.close(); } catch (e) { d.removeAttribute("open"); } }
+  // Selalu tampilkan tombol pasang (kecuali sudah terpasang) — Android & iOS
+  if (!isStandalone) showInstallItem();
   if (installItem) installItem.addEventListener("click", function () {
     if (deferredPrompt) {
+      // Android/Chrome: prompt native satu-ketuk
       deferredPrompt.prompt();
-      deferredPrompt.userChoice.finally(function () { deferredPrompt = null; installItem.hidden = true; });
-    } else if (iosModal && iosModal.showModal) {
-      iosModal.showModal();
-    } else if (iosModal) {
-      iosModal.setAttribute("open", "");
+      deferredPrompt.userChoice.finally(function () { deferredPrompt = null; });
+    } else if (isIOS) {
+      openDlg(iosModal);            // iPhone: panduan Safari
+    } else {
+      openDlg(androidModal);        // Android/lainnya: panduan menu Chrome
     }
   });
-  var iosClose = document.getElementById("iosClose");
-  var iosOk = document.getElementById("iosOk");
-  if (iosClose) iosClose.addEventListener("click", closeIos);
-  if (iosOk) iosOk.addEventListener("click", closeIos);
+  ["iosClose", "iosOk"].forEach(function (id) {
+    var b = document.getElementById(id); if (b) b.addEventListener("click", function () { closeDlg(iosModal); });
+  });
+  ["androidClose", "androidOk"].forEach(function (id) {
+    var b = document.getElementById(id); if (b) b.addEventListener("click", function () { closeDlg(androidModal); });
+  });
+  // Setelah aplikasi terpasang: sembunyikan tombol & banner
+  window.addEventListener("appinstalled", function () {
+    if (installItem) installItem.hidden = true;
+    if (installBanner) installBanner.classList.remove("show");
+    deferredPrompt = null;
+  });
 
   /* ---------- Bottom-nav "Menu" membuka sidebar penuh ---------- */
   var bottomMenuBtn = document.getElementById("bottomMenuBtn");
