@@ -3,6 +3,8 @@ Flask==3.1.3
 Flask-SQLAlchemy==3.1.1
 Flask-Login==0.6.3
 python-dotenv==1.0.1
+# Pillow: kompres & perkecil foto produk/logo otomatis saat upload (hemat kuota + cepat)
+Pillow>=10.4,<13
 
 # === Web Push (opsional) ===
 # Dipakai untuk mengirim notifikasi push ke HP/desktop.

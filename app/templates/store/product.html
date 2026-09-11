@@ -39,11 +39,11 @@
   <div class="pdetail">
     <div class="pdetail-media">
       <div class="pdetail-img">
-        {% if p.image %}<img src="{{ p.image }}" alt="{{ p.name }}">
+        {% if p.image %}<img src="{{ p.image }}" alt="{{ p.name }}" decoding="async">
         {% else %}<div class="pcard-noimg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M20 7h-3.5l-1-2h-7l-1 2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z"/><circle cx="12" cy="13" r="3.5"/></svg></div>{% endif %}
         {% if p.discount_percent %}<span class="pcard-badge sale">-{{ p.discount_percent }}%</span>{% endif %}
       </div>
-      {% if p.image2 %}<div class="pdetail-thumb"><img src="{{ p.image2 }}" alt="{{ p.name }} 2"></div>{% endif %}
+      {% if p.image2 %}<div class="pdetail-thumb"><img src="{{ p.image2 }}" alt="{{ p.name }} 2" loading="lazy" decoding="async"></div>{% endif %}
     </div>
 
     <div class="pdetail-info">

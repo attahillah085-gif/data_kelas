@@ -79,6 +79,11 @@
 
 * { box-sizing: border-box; }
 input[type="checkbox"], input[type="radio"] { accent-color: var(--primary); }
+img { max-width: 100%; height: auto; }
+/* Hemat animasi untuk HP low-end / preferensi kurangi gerak */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+}
 html, body { height: 100%; }
 body {
   margin: 0;

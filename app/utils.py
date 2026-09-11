@@ -132,13 +132,50 @@ def upload_dir() -> Path:
     return d
 
 
+# Sisi terpanjang maksimum (px) & kualitas kompres JPEG untuk foto unggahan.
+MAX_IMAGE_DIM = 1600
+JPEG_QUALITY = 82
+
+
 def save_upload(file_storage) -> str | None:
-    """Simpan file gambar yang diunggah, kembalikan URL relatif (/static/uploads/..)."""
+    """Simpan gambar unggahan — otomatis diperkecil & dikompres agar ringan.
+
+    Foto besar dari HP (mis. 5 MB) diperkecil ke maksimal 1600px & dikompres,
+    sehingga toko cepat dibuka dan hemat bandwidth. Bila optimasi gagal
+    (mis. Pillow tak ada / file animasi), file disimpan apa adanya.
+    """
     if not file_storage or not file_storage.filename:
         return None
     ext = os.path.splitext(secure_filename(file_storage.filename))[1].lower()
     if ext not in ALLOWED_IMAGE_EXT:
         return None
-    name = secrets.token_hex(8) + ext
-    file_storage.save(str(upload_dir() / name))
-    return f"/static/uploads/{name}"
+    name = secrets.token_hex(8)
+    dest = upload_dir()
+
+    # GIF (mungkin animasi) disimpan utuh agar animasinya tidak hilang.
+    if ext != ".gif":
+        try:
+            from PIL import Image, ImageOps
+            file_storage.stream.seek(0)
+            img = Image.open(file_storage.stream)
+            img = ImageOps.exif_transpose(img)          # koreksi rotasi kamera HP
+            img.thumbnail((MAX_IMAGE_DIM, MAX_IMAGE_DIM), Image.LANCZOS)
+            has_alpha = img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info)
+            if has_alpha:
+                out = f"{name}.png"
+                img.convert("RGBA").save(dest / out, format="PNG", optimize=True)
+            else:
+                out = f"{name}.jpg"
+                img.convert("RGB").save(dest / out, format="JPEG",
+                                        quality=JPEG_QUALITY, optimize=True, progressive=True)
+            return f"/static/uploads/{out}"
+        except Exception:
+            pass  # jatuh ke penyimpanan mentah di bawah
+
+    out = f"{name}{ext}"
+    try:
+        file_storage.stream.seek(0)
+    except Exception:
+        pass
+    file_storage.save(str(dest / out))
+    return f"/static/uploads/{out}"
