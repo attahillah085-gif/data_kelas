@@ -1,9 +1,11 @@
-/* The Girl House Service Worker */
-const CACHE = "thegirlhouse-v3";
+/* The Girl House Service Worker — Offline Level 1 (fokus manajemen) */
+const CACHE = "thegirlhouse-v4";
 const APP_SHELL = [
   "/offline",
   "/static/css/style.css",
+  "/static/css/store.css",
   "/static/js/app.js",
+  "/static/js/store.js",
   "/static/icons/icon-192.png",
   "/static/icons/favicon.svg",
   "/static/manifest.webmanifest",
@@ -31,22 +33,41 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // Aset statis: network-first (perubahan langsung tampil), fallback cache saat offline
+  // Jangan cache endpoint dinamis/aksi (API, login, dsb) — selalu ke jaringan.
+  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/logout")) {
+    return; // biarkan default (butuh online)
+  }
+
+  // Aset statis (CSS/JS/gambar): stale-while-revalidate — tampil instan dari
+  // cache, sambil diperbarui di latar belakang. Ringan & cepat di HP.
   if (url.pathname.startsWith("/static/")) {
     event.respondWith(
-      fetch(req).then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
-        return res;
-      }).catch(() => caches.match(req))
+      caches.open(CACHE).then((cache) =>
+        cache.match(req).then((cached) => {
+          const network = fetch(req).then((res) => {
+            if (res && res.status === 200) cache.put(req, res.clone());
+            return res;
+          }).catch(() => cached);
+          return cached || network;
+        })
+      )
     );
     return;
   }
 
-  // Navigasi halaman: network-first, fallback offline
+  // Navigasi halaman: network-first (selalu coba data terbaru), lalu jatuh ke
+  // salinan halaman yang pernah dibuka, terakhir ke halaman "offline".
   if (req.mode === "navigate") {
     event.respondWith(
-      fetch(req).catch(() => caches.match("/offline"))
+      fetch(req).then((res) => {
+        if (res && res.status === 200) {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+        }
+        return res;
+      }).catch(() =>
+        caches.match(req).then((cached) => cached || caches.match("/offline"))
+      )
     );
     return;
   }

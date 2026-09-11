@@ -179,3 +179,65 @@ def save_upload(file_storage) -> str | None:
         pass
     file_storage.save(str(dest / out))
     return f"/static/uploads/{out}"
+
+
+# Nama file ikon aplikasi yang dihasilkan dari logo (disimpan di volume uploads).
+APP_ICON_FILES = ["appicon-192.png", "appicon-512.png", "appicon-maskable-512.png"]
+
+
+def generate_app_icons(logo_rel_url: str) -> bool:
+    """Buat ikon aplikasi (PWA) dari logo unggahan agar ikon HP = logo web.
+
+    Logo ditaruh di kanvas persegi putih (rapi untuk home screen & install).
+    Mengembalikan True bila berhasil.
+    """
+    if not logo_rel_url:
+        return False
+    try:
+        from PIL import Image
+        static = Path(current_app.static_folder)
+        src = static / logo_rel_url.replace("/static/", "", 1)
+        if not src.exists():
+            return False
+        logo = Image.open(src)
+        from PIL import ImageOps
+        logo = ImageOps.exif_transpose(logo).convert("RGBA")
+        dest = upload_dir()
+        specs = [
+            (192, "appicon-192.png", 0.12),
+            (512, "appicon-512.png", 0.12),
+            (512, "appicon-maskable-512.png", 0.20),  # padding lebih besar (safe zone)
+        ]
+        for size, name, pad_ratio in specs:
+            canvas = Image.new("RGBA", (size, size), (255, 255, 255, 255))
+            pad = int(size * pad_ratio)
+            box = size - 2 * pad
+            lg = logo.copy()
+            lg.thumbnail((box, box), Image.LANCZOS)
+            x = (size - lg.width) // 2
+            y = (size - lg.height) // 2
+            canvas.alpha_composite(lg, (x, y))
+            canvas.convert("RGB").save(dest / name, format="PNG", optimize=True)
+        return True
+    except Exception:
+        return False
+
+
+def remove_app_icons() -> None:
+    """Hapus ikon aplikasi hasil generate (mis. saat logo dihapus)."""
+    try:
+        dest = upload_dir()
+        for name in APP_ICON_FILES:
+            p = dest / name
+            if p.exists():
+                p.unlink()
+    except Exception:
+        pass
+
+
+def app_icons_exist() -> bool:
+    try:
+        dest = upload_dir()
+        return all((dest / n).exists() for n in APP_ICON_FILES)
+    except Exception:
+        return False

@@ -49,9 +49,54 @@ def _auto_migrate_sqlite() -> None:
         pass
 
 
+def _ensure_vapid_keys(app: Flask) -> None:
+    """Pastikan kunci VAPID ada agar notifikasi push jalan tanpa setup manual.
+
+    Jika belum di-set lewat environment, buat sekali & simpan permanen di
+    instance/vapid.json (folder volume) sehingga tetap sama setelah restart.
+    """
+    if app.config.get("VAPID_PUBLIC_KEY") and app.config.get("VAPID_PRIVATE_KEY"):
+        return
+    import base64
+    import json
+    from pathlib import Path
+    try:
+        from .config import BASE_DIR
+        store = Path(BASE_DIR) / "instance"
+        store.mkdir(exist_ok=True)
+        f = store / "vapid.json"
+        keys = None
+        if f.exists():
+            try:
+                keys = json.loads(f.read_text())
+            except Exception:
+                keys = None
+        if not keys:
+            from cryptography.hazmat.primitives import serialization
+            from cryptography.hazmat.primitives.asymmetric import ec
+
+            def b64u(b: bytes) -> str:
+                return base64.urlsafe_b64encode(b).rstrip(b"=").decode()
+
+            priv = ec.generate_private_key(ec.SECP256R1())
+            priv_val = priv.private_numbers().private_value.to_bytes(32, "big")
+            pub = priv.public_key().public_bytes(
+                serialization.Encoding.X962,
+                serialization.PublicFormat.UncompressedPoint,
+            )
+            keys = {"public": b64u(pub), "private": b64u(priv_val)}
+            f.write_text(json.dumps(keys))
+        app.config["VAPID_PUBLIC_KEY"] = keys["public"]
+        app.config["VAPID_PRIVATE_KEY"] = keys["private"]
+    except Exception:
+        # Tanpa VAPID, notifikasi in-app tetap jalan; push saja yang nonaktif.
+        pass
+
+
 def create_app(config_object: type = Config) -> Flask:
     app = Flask(__name__, instance_relative_config=False)
     app.config.from_object(config_object)
+    _ensure_vapid_keys(app)
 
     # Di belakang reverse-proxy (Caddy/Nginx): hormati header X-Forwarded-*
     # agar url_for(_external), redirect, sitemap & Open Graph memakai https + host benar.
@@ -149,6 +194,15 @@ def _register_context(app: Flask) -> None:
                     pending_reviews = Review.query.filter_by(approved=False).count()
         except Exception:
             pass
+        # Ikon aplikasi (apple-touch) = ikon hasil logo bila ada, else bawaan.
+        from flask import url_for
+        from .utils import app_icons_exist
+        try:
+            app_icon = (url_for("static", filename="uploads/appicon-192.png")
+                        if app_icons_exist()
+                        else url_for("static", filename="icons/icon-192.png"))
+        except Exception:
+            app_icon = "/static/icons/icon-192.png"
         return {
             "setting": setting,
             "unread_count": unread,
@@ -156,6 +210,7 @@ def _register_context(app: Flask) -> None:
             "pending_reviews": pending_reviews,
             "recent_notifs": recent_notifs,
             "brand_logo": brand_logo,
+            "app_icon": app_icon,
             "now": datetime.utcnow(),
             "vapid_public_key": app.config.get("VAPID_PUBLIC_KEY", ""),
         }
@@ -172,9 +227,44 @@ def _register_pwa(app: Flask) -> None:
 
     @app.route("/manifest.webmanifest")
     def manifest():
-        resp = send_from_directory(app.static_folder, "manifest.webmanifest")
-        resp.headers["Content-Type"] = "application/manifest+json"
-        return resp
+        import json as _json
+        from flask import Response, url_for
+        from .utils import app_icons_exist
+        name = "The Girl House"
+        try:
+            from .models import Setting
+            s = Setting.get()
+            if s and s.business_name:
+                name = s.business_name
+        except Exception:
+            pass
+        # Ikon: pakai hasil generate dari logo bila ada; kalau tidak, ikon bawaan.
+        if app_icons_exist():
+            icons = [
+                {"src": url_for("static", filename="uploads/appicon-192.png"), "sizes": "192x192", "type": "image/png", "purpose": "any"},
+                {"src": url_for("static", filename="uploads/appicon-512.png"), "sizes": "512x512", "type": "image/png", "purpose": "any"},
+                {"src": url_for("static", filename="uploads/appicon-maskable-512.png"), "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+            ]
+        else:
+            icons = [
+                {"src": url_for("static", filename="icons/icon-192.png"), "sizes": "192x192", "type": "image/png", "purpose": "any"},
+                {"src": url_for("static", filename="icons/icon-512.png"), "sizes": "512x512", "type": "image/png", "purpose": "any"},
+                {"src": url_for("static", filename="icons/icon-maskable-512.png"), "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+            ]
+        data = {
+            "name": f"{name} — Manajemen", "short_name": name[:20], "id": "/",
+            "start_url": "/", "scope": "/", "display": "standalone",
+            "orientation": "portrait-primary",
+            "background_color": "#fff8fb", "theme_color": "#db6a9d", "lang": "id",
+            "categories": ["business", "finance", "productivity"],
+            "icons": icons,
+            "shortcuts": [
+                {"name": "Keuangan", "url": "/keuangan"},
+                {"name": "Inventori", "url": "/inventori"},
+                {"name": "Kalender Konten", "url": "/konten"},
+            ],
+        }
+        return Response(_json.dumps(data), content_type="application/manifest+json")
 
     @app.route("/offline")
     def offline():

@@ -28,7 +28,7 @@ from .models import (
     ROLE_MANAGER,
 )
 from .services import compute_investor_shares, compute_profit_distribution, generate_content_reminders
-from .utils import owner_required, save_upload
+from .utils import owner_required, save_upload, generate_app_icons, remove_app_icons
 
 bp = Blueprint("main", __name__)
 
@@ -197,9 +197,11 @@ def settings():
         # --- Logo toko (unggah / hapus) ---
         if request.form.get("logo_remove"):
             s.logo_path = ""
+            remove_app_icons()
         logo_url = save_upload(request.files.get("logo"))
         if logo_url:
             s.logo_path = logo_url
+            generate_app_icons(logo_url)   # ikon aplikasi (PWA) = logo
         db.session.commit()
         flash("Pengaturan disimpan.", "success")
         return redirect(url_for("main.settings"))
