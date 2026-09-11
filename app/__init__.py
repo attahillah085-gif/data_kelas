@@ -148,6 +148,15 @@ def create_app(config_object: type = Config) -> Flask:
                 db.session.rollback()
         # Auto-migrasi ringan: tambah kolom baru tanpa menghapus data
         _auto_migrate_sqlite()
+        # Ikon aplikasi (PWA) dari logo yang sudah diunggah — buat bila belum ada
+        try:
+            from .models import Setting
+            from .utils import generate_app_icons, app_icons_exist
+            s = Setting.get()
+            if s and getattr(s, "logo_path", "") and not app_icons_exist():
+                generate_app_icons(s.logo_path)
+        except Exception:
+            pass
 
     _register_context(app)
     _register_pwa(app)
