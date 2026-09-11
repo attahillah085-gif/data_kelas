@@ -107,6 +107,26 @@ def push_subscribe():
     return jsonify({"ok": True})
 
 
+@bp.route("/api/push/test", methods=["POST"])
+@login_required
+def push_test():
+    """Kirim notifikasi percobaan ke perangkat pengguna saat ini."""
+    from .services import _push_to_user
+    if not push_enabled():
+        return jsonify({"ok": False, "reason": "server"})
+    devices = PushSubscription.query.filter_by(user_id=current_user.id).count()
+    if devices == 0:
+        return jsonify({"ok": False, "reason": "no_sub"})
+    _push_to_user(
+        current_user.id,
+        "Tes Notifikasi 🎉",
+        "Mantap! Notifikasi HP The Girl House sudah aktif.",
+        link=url_for("notifications.index"),
+    )
+    db.session.commit()
+    return jsonify({"ok": True, "devices": devices})
+
+
 @bp.route("/api/push/unsubscribe", methods=["POST"])
 @login_required
 def push_unsubscribe():

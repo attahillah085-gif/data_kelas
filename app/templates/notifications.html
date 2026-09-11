@@ -5,6 +5,7 @@
 
 {% block topbar_actions %}
   <button class="btn btn-ghost btn-sm" id="enablePushBtn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg> <span class="hide-sm">Aktifkan Notif HP</span></button>
+  <button class="btn btn-ghost btn-sm" id="testPushBtn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg> <span class="hide-sm">Tes Notif</span></button>
   <form method="post" action="{{ url_for('notifications.mark_all_read') }}"><button class="btn btn-primary btn-sm" type="submit">Tandai semua terbaca</button></form>
 {% endblock %}
 
@@ -37,4 +38,29 @@
     {% endfor %}
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function(){
+    var b = document.getElementById("testPushBtn");
+    if (!b) return;
+    b.addEventListener("click", function(){
+      b.disabled = true;
+      fetch("/api/push/test", { method: "POST" })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if (d.ok) {
+            alert("Notif tes dikirim ke " + d.devices + " perangkat. Cek layar HP-mu ya 🎉");
+          } else if (d.reason === "no_sub") {
+            alert("Aktifkan 'Notif HP' dulu di HP yang mau dites (tombol di sebelah).\n\niPhone: pasang app ke Home Screen dulu, buka dari ikonnya, baru Aktifkan Notif HP.");
+          } else {
+            alert("Push belum siap di server. Coba deploy versi terbaru dulu.");
+          }
+        })
+        .catch(function(){ alert("Gagal mengirim tes. Coba lagi."); })
+        .finally(function(){ b.disabled = false; });
+    });
+  })();
+</script>
 {% endblock %}
