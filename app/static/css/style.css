@@ -504,8 +504,11 @@ input:hover, select:hover, textarea:hover { border-color: var(--border-strong); 
    anti-zoom input, safe-area iPhone, layout ringkas)
    ========================================================= */
 
-/* Cegah geser horizontal tak sengaja + elemen lebar aman */
-html, body { overflow-x: hidden; }
+/* Cegah geser horizontal tak sengaja TANPA merusak scroll vertikal.
+   'clip' memotong luapan samping tapi tidak membuat body jadi wadah-scroll
+   (memakai 'hidden' di html/body bikin halaman "mentok" tak bisa scroll ke bawah
+   di iOS Safari). Fallback ke 'hidden' untuk browser lama. */
+html, body { max-width: 100%; overflow-x: hidden; overflow-x: clip; overflow-y: visible; }
 .table-wrap, .barchart { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
 /* Tombol "Pasang Aplikasi" di sidebar */

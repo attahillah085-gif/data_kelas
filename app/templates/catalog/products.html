@@ -17,7 +17,7 @@
     <div class="field"><label>Nama produk</label><input name="name" value="{{ p.name if p }}" placeholder="mis. Kaos Vintage Band" required></div>
     <div class="form-row">
       <div class="field"><label>Kategori</label><select name="category">{% for c in categories %}<option {{ 'selected' if p and p.category==c }}>{{ c }}</option>{% endfor %}</select></div>
-      <div class="field"><label>Ukuran</label><input name="size" value="{{ p.size if p }}" placeholder="mis. M / S,M,L / All size"></div>
+      <div class="field"><label>Ukuran</label><input name="size" value="{{ p.size if p }}" placeholder="mis. M / All size"><span class="hint">Ukuran tunggal. Bila pembeli perlu <b>memilih</b> beberapa ukuran, pakai tombol "Varian".</span></div>
     </div>
     <div class="form-row-3">
       <div class="field"><label>Harga jual</label><input type="number" name="price" min="0" value="{{ p.price if p else '' }}" required></div>
@@ -111,9 +111,19 @@
 {% for p in items %}
 <dialog id="dlgEdit{{ p.id }}">{{ product_form(url_for('catalog.product_edit', pid=p.id), p, 'dlgEdit' ~ p.id) }}</dialog>
 <dialog id="dlgVar{{ p.id }}">
-  <div class="dialog-head"><h3>Varian & Stok</h3><button type="button" class="icon-btn close-x" data-close-dialog="dlgVar{{ p.id }}">✕</button></div>
+  <div class="dialog-head"><h3>Ukuran / Varian &amp; Stok</h3><button type="button" class="icon-btn close-x" data-close-dialog="dlgVar{{ p.id }}">✕</button></div>
   <div class="dialog-body">
-    <p class="text-soft" style="font-size:.82rem;margin-top:0">Kelola ukuran/warna dengan stok masing-masing untuk <strong>{{ p.name }}</strong>. Bila ada varian, stok produk mengikuti total varian.</p>
+    <p class="text-soft" style="font-size:.82rem;margin-top:0">Punya beberapa ukuran/warna untuk <strong>{{ p.name }}</strong>? Tambahkan tiap ukuran sebagai varian beserta stoknya. Pembeli akan <strong>memilih ukuran</strong> saat belanja, dan stok produk otomatis dijumlahkan dari semua varian.</p>
+    <div class="flex gap-6" style="flex-wrap:wrap;align-items:center;margin-bottom:12px">
+      <span class="text-soft" style="font-size:.76rem">Tambah cepat:</span>
+      {% for qs in ['S','M','L','XL','XXL','All Size'] %}
+      <form method="post" action="{{ url_for('catalog.variant_add', pid=p.id) }}" style="display:inline">
+        <input type="hidden" name="label" value="{{ qs }}">
+        <input type="hidden" name="stock" value="1">
+        <button class="btn btn-soft btn-sm" type="submit" title="Tambah ukuran {{ qs }} (stok 1)">+ {{ qs }}</button>
+      </form>
+      {% endfor %}
+    </div>
     {% for v in p.variants %}
     <form method="post" action="{{ url_for('catalog.variant_edit', vid=v.id) }}" class="flex gap-6" style="align-items:flex-end;margin-bottom:8px">
       <div class="field" style="margin:0;flex:1"><label style="font-size:.7rem">Varian</label><input name="label" value="{{ v.label }}" required></div>

@@ -62,6 +62,35 @@
     input.dispatchEvent(new Event("change"));
   });
 
+  /* ---------- Pilih ukuran/varian sebagai chip (bukan dropdown) ---------- */
+  document.addEventListener("click", function (e) {
+    var chip = e.target.closest(".var-chip");
+    if (!chip || chip.classList.contains("out") || chip.classList.contains("static") || chip.disabled) return;
+    var wrap = chip.closest(".var-chips");
+    if (!wrap) return;
+    wrap.querySelectorAll(".var-chip").forEach(function (c) { c.classList.remove("active"); });
+    chip.classList.add("active");
+    var box = document.getElementById("variantBox");
+    if (box) box.classList.remove("err");
+    var picked = document.getElementById("varPicked");
+    if (picked) picked.textContent = chip.getAttribute("data-label") || "";
+    // Batasi jumlah sesuai stok varian terpilih
+    var stock = parseInt(chip.getAttribute("data-stock") || "0", 10);
+    var qi = document.getElementById("qtyInput");
+    if (qi && stock > 0) {
+      qi.setAttribute("max", stock);
+      if (parseInt(qi.value || "1", 10) > stock) qi.value = stock;
+    }
+  });
+
+  function readVariant() {
+    var chips = document.getElementById("variantChips");
+    if (!chips) return { ok: true, id: "", label: "" };
+    var sel = chips.querySelector(".var-chip.active");
+    if (!sel) return { ok: false };
+    return { ok: true, id: sel.getAttribute("data-vid"), label: sel.getAttribute("data-label") || "" };
+  }
+
   /* ---------- Add to cart ---------- */
   document.addEventListener("click", function (e) {
     var b = e.target.closest(".add-cart");
@@ -69,12 +98,16 @@
     var qty = 1;
     var src = b.getAttribute("data-qty-source");
     if (src) { var qi = document.getElementById(src); if (qi) qty = Math.max(parseInt(qi.value || "1", 10), 1); }
-    var variantId = "", variantLabel = "";
-    var vs = document.getElementById("variantSelect");
-    if (vs) {
-      if (!vs.value) { toast("Pilih varian dulu ya"); return; }
-      variantId = vs.value;
-      variantLabel = (vs.options[vs.selectedIndex].textContent || "").replace(/\s*\(habis\)\s*$/, "").trim();
+    var v = readVariant();
+    if (!v.ok) {
+      toast("Pilih ukuran/varian dulu ya");
+      var box = document.getElementById("variantBox");
+      if (box) {
+        box.classList.add("err");
+        try { box.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (err) {}
+        setTimeout(function () { box.classList.remove("err"); }, 1400);
+      }
+      return;
     }
     addItem({
       id: parseInt(b.getAttribute("data-id"), 10),
@@ -82,9 +115,23 @@
       price: parseInt(b.getAttribute("data-price"), 10),
       image: b.getAttribute("data-image") || "",
       slug: b.getAttribute("data-slug") || "",
-      qty: qty, variantId: variantId, variant: variantLabel,
+      qty: qty, variantId: v.id, variant: v.label,
     });
+    // "Beli Sekarang" → langsung ke checkout; selain itu tampilkan toast
+    if (b.hasAttribute("data-buy")) { window.location.href = "/checkout"; return; }
     toast("Ditambahkan ke keranjang");
+  });
+
+  /* ---------- Galeri produk (ganti foto utama saat thumbnail ditekan) ---------- */
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest(".pd-thumb");
+    if (!t) return;
+    var main = document.getElementById("pdMainImg");
+    var src = t.getAttribute("data-src");
+    if (main && src) main.src = src;
+    var wrap = t.closest(".pd-thumbs");
+    if (wrap) wrap.querySelectorAll(".pd-thumb").forEach(function (x) { x.classList.remove("active"); });
+    t.classList.add("active");
   });
   function keyOf(x) { return x.id + "|" + (x.variantId || ""); }
   function addItem(item) {

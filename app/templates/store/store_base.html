@@ -27,7 +27,7 @@
   <script>(function(){try{var t=localStorage.getItem('tf-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
   {% block extra_head %}{% endblock %}
 </head>
-<body class="store">
+<body class="store {% block body_class %}{% endblock %}">
 {% if setting.promo_active and setting.promo_text %}
 <a class="promo-bar" href="{{ setting.promo_link or url_for('store.index') }}">✨ {{ setting.promo_text }}</a>
 {% endif %}
