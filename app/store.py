@@ -24,7 +24,14 @@ from .models import (
     Review,
     Setting,
 )
-from .services import generate_order_code, notify_managers, whatsapp_link
+from .services import (
+    build_order_message,
+    generate_order_code,
+    notify_managers,
+    payment_detail,
+    payment_methods,
+    whatsapp_link,
+)
 
 bp = Blueprint("store", __name__)
 
@@ -135,6 +142,10 @@ def checkout():
         phone = (request.form.get("phone") or "").strip()
         address = (request.form.get("address") or "").strip()
         note = (request.form.get("note") or "").strip()
+        pay = (request.form.get("payment_method") or "").strip()
+        valid_pay = [m["key"] for m in payment_methods(setting)]
+        if pay not in valid_pay:
+            pay = valid_pay[0] if valid_pay else "cod"
         raw = request.form.get("items") or "[]"
         try:
             wanted = json.loads(raw)
@@ -143,12 +154,12 @@ def checkout():
 
         if not (name and phone):
             flash("Nama dan nomor WhatsApp wajib diisi.", "danger")
-            return render_template("store/checkout.html", setting=setting)
+            return render_template("store/checkout.html", setting=setting, methods=payment_methods(setting))
 
         # Bangun item pesanan dari DB (harga & nama diambil dari server)
         order = Order(
             code=generate_order_code(), customer_name=name, customer_phone=phone,
-            customer_address=address, note=note,
+            customer_address=address, note=note, payment_method=pay,
         )
         subtotal = 0
         for row in wanted:
@@ -200,7 +211,7 @@ def checkout():
         db.session.commit()
         return redirect(url_for("store.order", code=order.code))
 
-    return render_template("store/checkout.html", setting=setting)
+    return render_template("store/checkout.html", setting=setting, methods=payment_methods(setting))
 
 
 @bp.route("/pesanan/<code>")
@@ -210,21 +221,12 @@ def order(code):
         abort(404)
     setting = Setting.get()
 
-    # Pesan WhatsApp
-    lines = [f"Halo {setting.business_name}, saya mau konfirmasi pesanan *{o.code}*:", ""]
-    for it in o.items:
-        lines.append(f"• {it.product_name} x{it.qty} = Rp {it.line_total:,}".replace(",", "."))
-    lines.append("")
-    lines.append(f"Subtotal: Rp {o.subtotal:,}".replace(",", "."))
-    if o.shipping:
-        lines.append(f"Ongkir: Rp {o.shipping:,}".replace(",", "."))
-    lines.append(f"*Total: Rp {o.total:,}*".replace(",", "."))
-    lines.append("")
-    lines.append(f"Nama: {o.customer_name}")
-    lines.append(f"Alamat: {o.customer_address or '-'}")
-    wa = whatsapp_link(setting.whatsapp_number, "\n".join(lines)) if setting.whatsapp_number else ""
+    # Pesan WhatsApp lengkap (rincian + instruksi bayar)
+    msg = build_order_message(o, setting)
+    wa = whatsapp_link(setting.whatsapp_number, msg) if setting.whatsapp_number else ""
+    pay = payment_detail(setting, o.payment_method)
 
-    return render_template("store/order.html", o=o, setting=setting, wa=wa)
+    return render_template("store/order.html", o=o, setting=setting, wa=wa, pay=pay)
 
 
 # ---------------- Halaman info ----------------

@@ -6,13 +6,36 @@
   <div class="section-head"><h2>Checkout</h2></div>
 
   <form method="post" action="{{ url_for('store.checkout') }}" id="checkoutForm" class="cart-layout">
-    <div class="card card-pad">
-      <h3 class="mb-16">Data Pengiriman</h3>
-      <div class="field"><label>Nama lengkap</label><input name="name" placeholder="Nama penerima" required></div>
-      <div class="field"><label>Nomor WhatsApp</label><input name="phone" inputmode="tel" placeholder="0812xxxxxxxx" required></div>
-      <div class="field"><label>Alamat lengkap</label><textarea name="address" placeholder="Jalan, RT/RW, kelurahan, kota, kode pos"></textarea></div>
-      <div class="field"><label>Catatan <span class="text-soft">(opsional)</span></label><input name="note" placeholder="mis. warna/ukuran, patokan alamat"></div>
-      <input type="hidden" name="items" id="itemsField" value="[]">
+    <div>
+      <div class="card card-pad">
+        <h3 class="mb-16">Data Pengiriman</h3>
+        <div class="field"><label>Nama lengkap</label><input name="name" placeholder="Nama penerima" required></div>
+        <div class="field"><label>Nomor WhatsApp</label><input name="phone" inputmode="tel" placeholder="0812xxxxxxxx" required></div>
+        <div class="field"><label>Alamat lengkap</label><textarea name="address" placeholder="Jalan, RT/RW, kelurahan, kota, kode pos"></textarea></div>
+        <div class="field"><label>Catatan <span class="text-soft">(opsional)</span></label><input name="note" placeholder="mis. warna/ukuran, patokan alamat"></div>
+        <input type="hidden" name="items" id="itemsField" value="[]">
+      </div>
+
+      <div class="card card-pad" style="margin-top:14px">
+        <h3 class="mb-16">💳 Metode Pembayaran</h3>
+        {% if methods %}
+        <div class="pay-methods">
+          {% for m in methods %}
+          <label class="pay-opt">
+            <input type="radio" name="payment_method" value="{{ m.key }}" {{ 'checked' if loop.first }}>
+            <span class="pay-check"></span>
+            <span class="pay-body">
+              <span class="pay-title">{{ m.label }}</span>
+              <span class="pay-detail">{{ m.detail }}</span>
+            </span>
+          </label>
+          {% endfor %}
+        </div>
+        <p class="text-soft" style="font-size:.78rem;margin:12px 2px 0">Pembayaran dikonfirmasi via WhatsApp. Instruksi lengkap muncul setelah pesanan dibuat.</p>
+        {% else %}
+        <p class="text-soft" style="font-size:.85rem">Detail pembayaran akan diberikan via WhatsApp setelah pesanan dibuat. Atur rekening/e-wallet di <strong>Pengaturan</strong>.</p>
+        {% endif %}
+      </div>
     </div>
 
     <aside class="cart-summary">
@@ -21,8 +44,8 @@
       <div class="row-between mt-8"><span class="text-muted">Subtotal</span><span class="fw-700" id="coSubtotal">Rp 0</span></div>
       {% if setting.shipping_fee %}<div class="row-between"><span class="text-muted">Ongkir</span><span class="fw-700">{{ setting.shipping_fee|rupiah }}</span></div>{% endif %}
       <div class="row-between cart-total"><span>Total</span><span id="coTotal">Rp 0</span></div>
-      <button type="submit" class="btn btn-primary btn-block btn-lg mt-16" id="coSubmit">Buat Pesanan</button>
-      <p class="text-soft mt-8" style="font-size:.78rem">Setelah pesanan dibuat, kamu bisa langsung konfirmasi via WhatsApp.</p>
+      <button type="submit" class="btn btn-primary btn-block btn-lg mt-16" id="coSubmit">Buat Pesanan &amp; Bayar</button>
+      <p class="text-soft mt-8" style="font-size:.78rem;text-align:center">🔒 Aman — kamu konfirmasi langsung ke penjual via WhatsApp.</p>
     </aside>
   </form>
 </div>

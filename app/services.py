@@ -282,3 +282,72 @@ def whatsapp_link(number: str, message: str) -> str:
     from urllib.parse import quote
     num = "".join(ch for ch in (number or "") if ch.isdigit())
     return f"https://wa.me/{num}?text={quote(message)}"
+
+
+# --------------------------------------------------------------------------
+#  Pembayaran (checkout via WhatsApp — tanpa payment gateway)
+# --------------------------------------------------------------------------
+PAYMENT_LABELS = {
+    "transfer": "Transfer Bank",
+    "ewallet": "E-Wallet",
+    "cod": "COD (Bayar di Tempat)",
+}
+
+
+def payment_methods(setting):
+    """Metode bayar yang aktif: list dict {key,label,detail} sesuai pengaturan."""
+    methods = []
+    if setting and (setting.bank_info or "").strip():
+        methods.append({"key": "transfer", "label": PAYMENT_LABELS["transfer"],
+                        "detail": setting.bank_info.strip()})
+    if setting and (setting.ewallet_info or "").strip():
+        methods.append({"key": "ewallet", "label": PAYMENT_LABELS["ewallet"],
+                        "detail": setting.ewallet_info.strip()})
+    if not setting or setting.cod_enabled:
+        methods.append({"key": "cod", "label": PAYMENT_LABELS["cod"],
+                        "detail": "Bayar tunai saat barang diterima."})
+    return methods
+
+
+def payment_detail(setting, method_key):
+    for m in payment_methods(setting):
+        if m["key"] == method_key:
+            return m
+    return None
+
+
+def build_order_message(order, setting) -> str:
+    """Pesan WhatsApp lengkap: rincian pesanan + instruksi pembayaran."""
+    def rp(n):
+        return f"Rp {n:,}".replace(",", ".")
+
+    biz = setting.business_name if setting else "The Girl House"
+    lines = [f"Halo *{biz}* 👋, saya mau pesan (kode *{order.code}*):", ""]
+    for it in order.items:
+        name = it.display_name if hasattr(it, "display_name") else it.product_name
+        lines.append(f"• {name} — {it.qty} pcs = {rp(it.line_total)}")
+    lines.append("")
+    lines.append(f"Subtotal: {rp(order.subtotal)}")
+    if order.shipping:
+        lines.append(f"Ongkir: {rp(order.shipping)}")
+    lines.append(f"*TOTAL: {rp(order.total)}*")
+    lines.append("")
+    lines.append("*Data Penerima*")
+    lines.append(f"Nama: {order.customer_name}")
+    lines.append(f"HP: {order.customer_phone}")
+    lines.append(f"Alamat: {order.customer_address or '-'}")
+    if order.note:
+        lines.append(f"Catatan: {order.note}")
+
+    pm = payment_detail(setting, order.payment_method)
+    if pm:
+        lines.append("")
+        lines.append(f"*Metode Bayar: {pm['label']}*")
+        if pm["key"] != "cod":
+            lines.append(pm["detail"])
+    if setting and (setting.payment_note or "").strip():
+        lines.append("")
+        lines.append(setting.payment_note.strip())
+    lines.append("")
+    lines.append("Mohon konfirmasi ketersediaan & ongkir ya. Terima kasih 🙏")
+    return "\n".join(lines)

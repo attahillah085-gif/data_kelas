@@ -214,3 +214,26 @@ body.store { background: var(--bg); }
   transition: transform .15s; }
 .wa-float:hover { transform: scale(1.08); text-decoration: none; }
 
+
+/* ---------- Metode pembayaran (checkout) ---------- */
+.pay-methods { display: grid; gap: 10px; }
+.pay-opt { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px;
+  border: 1.5px solid var(--border); border-radius: 14px; cursor: pointer; transition: .15s; position: relative; }
+.pay-opt:hover { border-color: var(--primary); }
+.pay-opt input { position: absolute; opacity: 0; width: 0; height: 0; }
+.pay-check { flex: none; width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid var(--border-strong); margin-top: 2px; position: relative; transition: .15s; }
+.pay-opt input:checked ~ .pay-check { border-color: var(--primary); }
+.pay-opt input:checked ~ .pay-check::after { content: ""; position: absolute; inset: 3px;
+  border-radius: 50%; background: var(--primary); }
+.pay-opt:has(input:checked) { border-color: var(--primary); background: var(--primary-soft); }
+.pay-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pay-title { font-weight: 700; font-size: .95rem; }
+.pay-detail { font-size: .82rem; color: var(--text-muted); white-space: pre-line; word-break: break-word; }
+
+/* ---------- Kotak instruksi bayar (halaman pesanan) ---------- */
+.pay-box { border: 1.5px dashed var(--primary); background: var(--primary-soft);
+  border-radius: 14px; padding: 14px 16px; }
+.pay-box-head { font-weight: 700; }
+.pay-box-detail { margin-top: 6px; font-size: .92rem; white-space: pre-line; word-break: break-word; }
+.pay-box-note { margin-top: 8px; font-size: .82rem; color: var(--text-muted); }

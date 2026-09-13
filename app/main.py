@@ -183,6 +183,11 @@ def settings():
             s.shipping_fee = max(int(float(request.form.get("shipping_fee") or 0)), 0)
         except ValueError:
             pass
+        # --- Pembayaran ---
+        s.bank_info = (request.form.get("bank_info") or "").strip()
+        s.ewallet_info = (request.form.get("ewallet_info") or "").strip()
+        s.cod_enabled = bool(request.form.get("cod_enabled"))
+        s.payment_note = (request.form.get("payment_note") or "").strip()
         s.promo_active = bool(request.form.get("promo_active"))
         s.promo_text = (request.form.get("promo_text") or "").strip()
         s.promo_link = (request.form.get("promo_link") or "").strip()

@@ -163,6 +163,12 @@ class Setting(db.Model):
     tiktok = db.Column(db.String(120), default="")
     shipping_fee = db.Column(db.Integer, default=0)
 
+    # Pembayaran (checkout via WhatsApp — tanpa payment gateway)
+    bank_info = db.Column(db.Text, default="")       # mis. "BCA 1234567890 a.n. Atahillah"
+    ewallet_info = db.Column(db.Text, default="")    # mis. "DANA/OVO 0812xxxx a.n. Atahillah"
+    cod_enabled = db.Column(db.Boolean, default=True)
+    payment_note = db.Column(db.Text, default="")    # instruksi tambahan (mis. kirim bukti transfer)
+
     # Banner promo di toko
     promo_active = db.Column(db.Boolean, default=False)
     promo_text = db.Column(db.String(200), default="")
@@ -468,6 +474,7 @@ class Order(db.Model):
     customer_phone = db.Column(db.String(30), nullable=False)
     customer_address = db.Column(db.Text, default="")
     note = db.Column(db.Text, default="")
+    payment_method = db.Column(db.String(20), default="")   # transfer / ewallet / cod
     status = db.Column(db.String(12), default=ORDER_PENDING, index=True)
     subtotal = db.Column(db.Integer, default=0)
     shipping = db.Column(db.Integer, default=0)

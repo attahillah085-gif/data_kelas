@@ -26,24 +26,45 @@
     {% if o.shipping %}<div class="row-between"><span class="text-muted">Ongkir</span><span class="fw-700">{{ o.shipping|rupiah }}</span></div>{% endif %}
     <div class="row-between cart-total"><span>Total</span><span>{{ o.total|rupiah }}</span></div>
 
+    {% if pay %}
+    <div class="pay-box mt-16">
+      <div class="pay-box-head">💳 Metode Bayar: <strong>{{ pay.label }}</strong></div>
+      {% if pay.key != 'cod' %}
+      <div class="pay-box-detail">{{ pay.detail }}</div>
+      {% else %}
+      <div class="pay-box-detail">Bayar tunai saat barang diterima.</div>
+      {% endif %}
+      {% if setting.payment_note %}<div class="pay-box-note">{{ setting.payment_note }}</div>{% endif %}
+    </div>
+    {% endif %}
+
     {% if wa %}
-    <a href="{{ wa }}" target="_blank" class="btn btn-success btn-block btn-lg mt-16">
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1 0 12 2Zm5.6 14.2c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .2-3-.6-2.5-1-4.1-3.6-4.2-3.7-.1-.2-1-1.3-1-2.5s.6-1.8.9-2c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.1.1.3 0 .5l-.4.5-.3.3c-.2.1-.3.3-.1.6.2.3.9 1.4 1.9 2.3 1.3 1.1 2 1.3 2.3 1.1.2-.1.4-.4.5-.6.2-.2.3-.2.5-.1l1.9.9c.2.1.4.2.4.3.1.2.1.7-.1 1.2Z"/></svg>
-      Konfirmasi via WhatsApp
+    <a href="{{ wa }}" target="_blank" rel="noopener" id="waConfirm" class="btn btn-success btn-block btn-lg mt-16" style="font-size:1.02rem">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1 0 12 2Zm5.6 14.2c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .2-3-.6-2.5-1-4.1-3.6-4.2-3.7-.1-.2-1-1.3-1-2.5s.6-1.8.9-2c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.1.1.3 0 .5l-.4.5-.3.3c-.2.1-.3.3-.1.6.2.3.9 1.4 1.9 2.3 1.3 1.1 2 1.3 2.3 1.1.2-.1.4-.4.5-.6.2-.2.3-.2.5-.1l1.9.9c.2.1.4.2.4.3.1.2.1.7-.1 1.2Z"/></svg>
+      Kirim Pesanan &amp; Bayar via WhatsApp
     </a>
+    <p class="text-soft mt-8" style="text-align:center;font-size:.8rem">Rincian pesanan &amp; instruksi bayar sudah otomatis terisi di pesan WhatsApp.</p>
     {% else %}
     <div class="muted-box mt-16" style="font-size:.86rem">Nomor WhatsApp toko belum diatur. Simpan kode pesanan <strong>{{ o.code }}</strong> untuk konfirmasi.</div>
     {% endif %}
-    <a href="{{ url_for('store.index') }}" class="btn btn-ghost btn-block mt-8">Kembali ke Toko</a>
+    <a href="{{ url_for('store.index') }}" class="btn btn-ghost btn-block mt-8">Belanja Lagi</a>
   </div>
 
   <p class="text-soft mt-16" style="text-align:center;font-size:.82rem">
-    Simpan kode <strong>{{ o.code }}</strong>. Tim kami akan memproses pesananmu setelah konfirmasi.
+    Simpan kode <strong>{{ o.code }}</strong>. Pesanan diproses setelah kamu konfirmasi via WhatsApp.
   </p>
 </div>
 
 <script>
   // Kosongkan keranjang setelah checkout sukses
   try { localStorage.removeItem('tgh-cart'); } catch(e){}
+  // Arahkan otomatis ke WhatsApp SEKALI per pesanan (tetap ada tombol sbg cadangan)
+  (function(){
+    var a = document.getElementById('waConfirm');
+    if (!a) return;
+    var key = 'tgh-wa-{{ o.code }}';
+    try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, '1'); } catch(e){}
+    setTimeout(function(){ try { window.location.href = a.href; } catch(e){} }, 1500);
+  })();
 </script>
 {% endblock %}

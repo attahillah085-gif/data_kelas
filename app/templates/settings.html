@@ -58,6 +58,15 @@
             <div class="field"><label>Link promo <span class="text-soft">(opsional)</span></label><input name="promo_link" value="{{ s.promo_link }}" placeholder="/ atau https://..."></div>
           </div>
         </div>
+
+        <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px">
+          <h4 style="margin:0 0 4px">💳 Pembayaran</h4>
+          <p class="text-soft" style="font-size:.8rem;margin:0 0 12px">Muncul sebagai pilihan saat checkout & otomatis masuk pesan WhatsApp pembeli. Kosongkan bila tak dipakai.</p>
+          <div class="field"><label>Transfer Bank</label><textarea name="bank_info" rows="2" placeholder="mis. BCA 1234567890 a.n. Atahillah">{{ s.bank_info }}</textarea></div>
+          <div class="field"><label>E-Wallet</label><textarea name="ewallet_info" rows="2" placeholder="mis. DANA / OVO / GoPay 0812xxxxxxx a.n. Atahillah">{{ s.ewallet_info }}</textarea></div>
+          <label class="check mb-8"><input type="checkbox" name="cod_enabled" {{ 'checked' if s.cod_enabled }}> Aktifkan COD (bayar di tempat)</label>
+          <div class="field"><label>Catatan pembayaran <span class="text-soft">(opsional)</span></label><input name="payment_note" value="{{ s.payment_note }}" placeholder="mis. Kirim bukti transfer via WhatsApp ya 🙏"></div>
+        </div>
       </div>
 
       <div class="dialog-foot" style="border-top:1px solid var(--border)"><button class="btn btn-primary" type="submit">Simpan Pengaturan</button></div>
