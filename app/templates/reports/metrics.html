@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title %}Metrik CEO — {{ setting.business_name }}{% endblock %}
+{% block page_title %}Metrik CEO{% endblock %}
+{% block page_subtitle %}Angka penting untuk memimpin — dihitung otomatis dari data toko-mu.{% endblock %}
+
+{% set badge = {'g':'b-green','w':'b-amber','b':'b-red'} %}
+{% set slabel = {'g':'Sehat','w':'Waspada','b':'Perlu aksi'} %}
+
+{% block content %}
+<style>
+  .metric-hint{font-size:.8rem;color:var(--text-soft);line-height:1.5;margin-top:8px}
+  .kpi-ceo{display:flex;flex-direction:column;gap:6px}
+  .kpi-ceo .top{display:flex;align-items:center;gap:8px}
+  .kpi-ceo .label{font-weight:600;font-size:.9rem;color:var(--text-muted)}
+  .kpi-ceo .value{font-size:1.7rem;font-weight:800;letter-spacing:-.01em;line-height:1}
+  .kpi-ceo .bench{font-size:.76rem;color:var(--text-soft);font-weight:600}
+  .calc-grid{display:grid;grid-template-columns:1fr;gap:8px}
+  @media(min-width:520px){.calc-grid{grid-template-columns:1fr 1fr 1fr}}
+  .calc-field label{display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);margin-bottom:4px}
+  .calc-field input{width:100%;font-variant-numeric:tabular-nums}
+  .calc-out{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+  @media(min-width:520px){.calc-out{grid-template-columns:1fr 1fr 1fr}}
+  .out-tile{background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:14px 16px}
+  .out-tile .n{font-size:1.5rem;font-weight:800;color:var(--primary-strong);line-height:1;font-variant-numeric:tabular-nums}
+  .out-tile .l{font-size:.78rem;color:var(--text-muted);font-weight:600;margin-top:5px}
+  .alloc-bar{display:flex;height:26px;border-radius:8px;overflow:hidden;margin:14px 0 6px;border:1px solid var(--border)}
+  .alloc-bar span{display:block;transition:width .2s}
+  .alloc-rows{display:flex;flex-direction:column;gap:9px;margin-top:12px}
+  .alloc-row{display:grid;grid-template-columns:16px 1fr auto auto;gap:10px;align-items:center;font-size:.92rem}
+  .alloc-row .sw{width:14px;height:14px;border-radius:4px}
+  .alloc-row .pct{font-variant-numeric:tabular-nums;color:var(--text-muted);width:42px;text-align:right}
+  .alloc-row .amt{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .aging-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+  .aging-row:last-child{border-bottom:none}
+  .aging-row .track{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden;margin-top:6px}
+  .aging-row .track .fill{height:100%}
+</style>
+
+<!-- Banner ke buku -->
+<div class="card card-pad mb-16" style="background:linear-gradient(120deg,var(--primary-soft),transparent);border-left:3px solid var(--primary)">
+  <div class="row-between" style="gap:12px;flex-wrap:wrap">
+    <div>
+      <strong>📖 Belum paham satu angka di halaman ini?</strong>
+      <div class="text-muted" style="font-size:.88rem;margin-top:2px">Semua metrik ini dibahas mendalam di Buku Pegangan CEO — lengkap dengan rumus, contoh, dan latihan.</div>
+    </div>
+    <a class="btn btn-soft btn-sm" href="https://claude.ai/artifact/CcotaG1WWk3toAAa4Apa36" target="_blank" rel="noopener">Buka Buku →</a>
+  </div>
+</div>
+
+{% if not has_batch_data %}
+<div class="muted-box mb-16" style="border-left:3px solid var(--warning)">
+  <strong>Sebagian metrik butuh data bal.</strong> Margin, sell-through, GMROI & perputaran dihitung dari data bal/karung di menu <a href="{{ url_for('inventory.index') }}">Inventori Stok</a> (modal, jumlah, terjual). Isi bal-mu di sana agar angka-angka ini hidup.
+</div>
+{% endif %}
+
+<!-- ====================== KPI ====================== -->
+<div class="grid g-4">
+  {% for k in kpis %}
+  <div class="card card-pad kpi-ceo">
+    <div class="top"><span class="label">{{ k.label }}</span><span class="badge {{ badge[k.status] }}" style="margin-left:auto">{{ slabel[k.status] }}</span></div>
+    <div class="value {{ 'text-green' if k.status=='g' else 'text-red' if k.status=='b' }}">{{ k.val }}</div>
+    <div class="bench">{{ k.bench }}</div>
+    <div class="metric-hint">{{ k.hint }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- ====================== BEP + ALOKASI ====================== -->
+<div class="grid cols-main mt-16">
+  <!-- BEP -->
+  <div class="card">
+    <div class="card-head"><h3>🎯 Titik Impas (BEP)</h3><div class="spacer"></div><span class="text-soft" style="font-size:.8rem">berapa harus laku biar tidak nombok</span></div>
+    <div class="card-body">
+      <p class="text-muted" style="margin-top:0;font-size:.9rem">Ubah angka untuk simulasi. Terisi otomatis dari datamu.</p>
+      <div class="calc-grid">
+        <div class="calc-field"><label>Biaya tetap / bulan</label><input type="number" id="bepFixed" value="{{ fixed }}" min="0"></div>
+        <div class="calc-field"><label>Laba kotor / pcs</label><input type="number" id="bepGp" value="{{ avg_gp }}" min="0"></div>
+        <div class="calc-field"><label>Harga jual rata²</label><input type="number" id="bepPrice" value="{{ avg_price }}" min="0"></div>
+      </div>
+      <div class="calc-out">
+        <div class="out-tile"><div class="n" id="bepPcs">—</div><div class="l">pcs harus laku / bulan</div></div>
+        <div class="out-tile"><div class="n" id="bepOmzet">—</div><div class="l">setara omzet / bulan</div></div>
+        <div class="out-tile"><div class="n" id="bepDaily">—</div><div class="l">target rata² / hari (26 hari)</div></div>
+      </div>
+      <p class="metric-hint">Di bawah angka ini kamu rugi; di atasnya baru untung. Biaya tetap diatur di <a href="{{ url_for('main.settings') }}">Pengaturan</a>.</p>
+    </div>
+  </div>
+
+  <!-- Cadangan kas -->
+  <div class="card card-pad">
+    <h3 style="font-size:1.05rem;margin:0 0 4px">🛡️ Cadangan Kas Ideal</h3>
+    <p class="text-muted" style="font-size:.88rem;margin:0 0 14px">Nafas darurat kalau penjualan sepi. Target: 2–3× biaya tetap bulanan.</p>
+    <div class="out-tile" style="margin-bottom:10px"><div class="n">{{ reserve_min|rupiah }}</div><div class="l">minimal (2× biaya tetap)</div></div>
+    <div class="out-tile"><div class="n">{{ reserve_ideal|rupiah }}</div><div class="l">ideal (3× biaya tetap)</div></div>
+    {% if not fixed %}<p class="metric-hint">Isi biaya tetap bulanan di <a href="{{ url_for('main.settings') }}">Pengaturan</a> untuk mengaktifkan.</p>{% endif %}
+  </div>
+</div>
+
+<!-- ====================== ALOKASI MODAL ====================== -->
+<div class="card mt-16">
+  <div class="card-head"><h3>💰 Alokasi Modal — Sistem Ember</h3><div class="spacer"></div><span class="text-soft" style="font-size:.8rem">ke mana tiap rupiah laba pergi</span></div>
+  <div class="card-body">
+    <div class="calc-grid" style="grid-template-columns:1fr">
+      <div class="calc-field"><label>Laba bersih yang mau dibagi (dasar)</label><input type="number" id="allocBase" value="{{ latest_net if latest_net>0 else 0 }}" min="0"><span class="metric-hint">{% if latest_name %}Terisi dari laba periode “{{ latest_name }}”. {% endif %}Ubah sesuai kebutuhan.</span></div>
+    </div>
+
+    <div class="alloc-bar" id="allocBar" aria-hidden="true"></div>
+    <div class="alloc-rows" id="allocRows"></div>
+
+    <p class="metric-hint" style="margin-top:14px">Porsi target (%) bisa diubah di <a href="{{ url_for('main.settings') }}">Pengaturan</a>. Total idealnya 100%. <span id="allocWarn" style="color:var(--danger);font-weight:600"></span></p>
+  </div>
+</div>
+
+<!-- ====================== DEAD STOCK AGING ====================== -->
+<div class="grid cols-main mt-16">
+  <div class="card">
+    <div class="card-head"><h3>⏳ Umur Stok (Dead Stock)</h3><div class="spacer"></div><span class="text-soft" style="font-size:.8rem">modal yang “tidur” di stok</span></div>
+    <div class="card-body">
+      {% if stock_value %}
+      {% set agecolor = {'fresh':'var(--success)','ok':'var(--primary)','watch':'var(--warning)','dead':'var(--danger)'} %}
+      {% for a in aging %}
+      <div class="aging-row">
+        <div style="min-width:0">
+          <div class="row-between"><span class="fw-700" style="font-size:.9rem">{{ a.label }}</span><span class="text-muted" style="font-size:.82rem">{{ a.pcs }} pcs</span></div>
+          <div class="track"><div class="fill" style="width:{{ (a.value/stock_value*100)|round|int if stock_value else 0 }}%;background:{{ agecolor[a.key] }}"></div></div>
+        </div>
+        <div class="fw-800" style="min-width:96px;text-align:right;font-variant-numeric:tabular-nums">{{ a.value|rupiah }}</div>
+      </div>
+      {% endfor %}
+      <div class="row-between mt-16" style="padding-top:12px;border-top:1px solid var(--border)">
+        <span class="text-muted">Total modal “tidur” &gt; 90 hari</span>
+        <span class="fw-800 {{ 'text-red' if dead_pct>25 else '' }}">{{ dead_value|rupiah }} ({{ dead_pct }}%)</span>
+      </div>
+      {% else %}
+      <div class="empty" style="padding:24px 10px"><p style="margin:0">Belum ada stok aktif dengan modal tercatat. Isi bal di <a href="{{ url_for('inventory.index') }}">Inventori</a>.</p></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card card-pad">
+    <h3 style="font-size:1.05rem;margin:0 0 10px">📦 Ringkasan Stok & Penjualan</h3>
+    <div class="divide">
+      <div class="row-between" style="padding:8px 0"><span class="text-muted">Nilai modal di stok aktif</span><span class="fw-700">{{ stock_value|rupiah }}</span></div>
+      <div class="row-between" style="padding:8px 0"><span class="text-muted">Jumlah pcs di stok</span><span class="fw-700">{{ stock_pieces }} pcs</span></div>
+      <div class="row-between" style="padding:8px 0"><span class="text-muted">Total terjual (semua bal)</span><span class="fw-700">{{ total_sold }} / {{ total_qty }} pcs</span></div>
+      <div class="row-between" style="padding:8px 0"><span class="text-muted">Laba kotor tercatat (bal)</span><span class="fw-700 text-green">{{ gross_profit|rupiah }}</span></div>
+      <div class="row-between" style="padding:8px 0"><span class="text-muted">Rata² belanja / pesanan (AOV)</span><span class="fw-700">{{ aov|rupiah }}</span></div>
+      <div class="row-between" style="padding:8px 0"><span class="text-muted">Pesanan toko dibayar</span><span class="fw-700">{{ order_count }}</span></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  function rp(n){ if(!isFinite(n)) n=0; return "Rp " + Math.round(n).toLocaleString("id-ID"); }
+  function num(id){ var e=document.getElementById(id); return e? (parseFloat(e.value)||0):0; }
+
+  // ---- BEP ----
+  var bepIds=["bepFixed","bepGp","bepPrice"];
+  function calcBep(){
+    var fixed=num("bepFixed"), gp=num("bepGp"), price=num("bepPrice");
+    var pcs = gp>0 ? Math.ceil(fixed/gp) : 0;
+    document.getElementById("bepPcs").textContent = gp>0 ? pcs + " pcs" : "—";
+    document.getElementById("bepOmzet").textContent = (gp>0 && price>0) ? rp(pcs*price) : "—";
+    document.getElementById("bepDaily").textContent = gp>0 ? (pcs/26).toFixed(1) + " pcs" : "—";
+  }
+  bepIds.forEach(function(id){ var e=document.getElementById(id); if(e) e.addEventListener("input", calcBep); });
+  calcBep();
+
+  // ---- Alokasi ----
+  var buckets=[
+    {key:"restock", label:"Restock stok", pct:{{ alloc.restock }}, color:"var(--primary)"},
+    {key:"reserve", label:"Cadangan kas", pct:{{ alloc.reserve }}, color:"var(--success)"},
+    {key:"marketing", label:"Marketing", pct:{{ alloc.marketing }}, color:"#c98a3c"},
+    {key:"ops", label:"Operasional / alat", pct:{{ alloc.ops }}, color:"#b07d8f"},
+    {key:"draw", label:"Bagi hasil / gajimu", pct:{{ alloc.draw }}, color:"var(--rose)"}
+  ];
+  var bar=document.getElementById("allocBar"), rows=document.getElementById("allocRows"), warn=document.getElementById("allocWarn");
+  function calcAlloc(){
+    var base=num("allocBase");
+    var tot=buckets.reduce(function(s,b){return s+b.pct;},0);
+    bar.innerHTML=""; rows.innerHTML="";
+    buckets.forEach(function(b){
+      var seg=document.createElement("span");
+      seg.style.width=(tot? b.pct/tot*100:0)+"%"; seg.style.background=b.color;
+      seg.title=b.label+" "+b.pct+"%";
+      bar.appendChild(seg);
+      var row=document.createElement("div"); row.className="alloc-row";
+      row.innerHTML='<span class="sw" style="background:'+b.color+'"></span>'+
+        '<span>'+b.label+'</span>'+
+        '<span class="pct">'+b.pct+'%</span>'+
+        '<span class="amt">'+rp(base*b.pct/100)+'</span>';
+      rows.appendChild(row);
+    });
+    warn.textContent = (tot!==100) ? ("Total target = "+tot+"%, sebaiknya 100%.") : "";
+  }
+  var ab=document.getElementById("allocBase"); if(ab) ab.addEventListener("input", calcAlloc);
+  calcAlloc();
+})();
+</script>
+{% endblock %}

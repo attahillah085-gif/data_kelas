@@ -188,6 +188,15 @@ def settings():
         s.ewallet_info = (request.form.get("ewallet_info") or "").strip()
         s.cod_enabled = bool(request.form.get("cod_enabled"))
         s.payment_note = (request.form.get("payment_note") or "").strip()
+        # --- Metrik CEO (biaya tetap & target alokasi) ---
+        for _field in ("fixed_costs_monthly", "alloc_restock", "alloc_reserve",
+                       "alloc_marketing", "alloc_ops", "alloc_draw"):
+            raw = request.form.get(_field)
+            if raw is not None:
+                try:
+                    setattr(s, _field, max(int(float(raw or 0)), 0))
+                except ValueError:
+                    pass
         s.promo_active = bool(request.form.get("promo_active"))
         s.promo_text = (request.form.get("promo_text") or "").strip()
         s.promo_link = (request.form.get("promo_link") or "").strip()

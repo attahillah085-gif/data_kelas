@@ -67,6 +67,22 @@
           <label class="check mb-8"><input type="checkbox" name="cod_enabled" {{ 'checked' if s.cod_enabled }}> Aktifkan COD (bayar di tempat)</label>
           <div class="field"><label>Catatan pembayaran <span class="text-soft">(opsional)</span></label><input name="payment_note" value="{{ s.payment_note }}" placeholder="mis. Kirim bukti transfer via WhatsApp ya 🙏"></div>
         </div>
+
+        <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px">
+          <h4 style="margin:0 0 4px">📊 Metrik CEO</h4>
+          <p class="text-soft" style="font-size:.8rem;margin:0 0 12px">Dipakai halaman <strong>Metrik CEO</strong> untuk menghitung titik impas (BEP) &amp; alokasi modal.</p>
+          <div class="field"><label>Biaya tetap per bulan</label><input type="number" name="fixed_costs_monthly" min="0" value="{{ s.fixed_costs_monthly }}"><span class="hint">Total sewa, listrik, gaji, langganan — untuk hitung titik impas (BEP).</span></div>
+          <label style="font-size:.8rem;font-weight:600;color:var(--text-muted)">Target alokasi laba (sistem ember — total idealnya 100%)</label>
+          <div class="form-row-3" style="margin-top:6px">
+            <div class="field"><label>Restock (%)</label><input type="number" name="alloc_restock" min="0" max="100" value="{{ s.alloc_restock }}"></div>
+            <div class="field"><label>Cadangan (%)</label><input type="number" name="alloc_reserve" min="0" max="100" value="{{ s.alloc_reserve }}"></div>
+            <div class="field"><label>Marketing (%)</label><input type="number" name="alloc_marketing" min="0" max="100" value="{{ s.alloc_marketing }}"></div>
+          </div>
+          <div class="form-row">
+            <div class="field"><label>Operasional (%)</label><input type="number" name="alloc_ops" min="0" max="100" value="{{ s.alloc_ops }}"></div>
+            <div class="field"><label>Bagi hasil / gaji (%)</label><input type="number" name="alloc_draw" min="0" max="100" value="{{ s.alloc_draw }}"></div>
+          </div>
+        </div>
       </div>
 
       <div class="dialog-foot" style="border-top:1px solid var(--border)"><button class="btn btn-primary" type="submit">Simpan Pengaturan</button></div>

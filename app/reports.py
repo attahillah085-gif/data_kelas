@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import csv
 import io
+import math
 from datetime import date
 
 from flask import Blueprint, Response, render_template, request
@@ -15,10 +16,12 @@ from .models import (
     EXPENSE,
     INCOME,
     ORDER_COUNTED,
+    InventoryBatch,
     Order,
     OrderItem,
     Period,
     Product,
+    Setting,
     Transaction,
 )
 from .utils import manage_required
@@ -105,6 +108,146 @@ def index():
         target=target, target_income=target_income, target_pct=target_pct,
         target_period=cur.name if cur else "", cash_balance=cash_balance,
     )
+
+
+def _status(value, good, warn, higher_better=True):
+    """Kembalikan 'g'/'w'/'b' berdasar ambang sehat/waspada."""
+    if higher_better:
+        if value >= good:
+            return "g"
+        if value >= warn:
+            return "w"
+        return "b"
+    else:
+        if value <= good:
+            return "g"
+        if value <= warn:
+            return "w"
+        return "b"
+
+
+def _compute_ceo_metrics():
+    """Hitung metrik ala CEO dari data nyata (bal inventori, pesanan, keuangan)."""
+    setting = Setting.get()
+    batches = InventoryBatch.query.all()
+
+    total_qty = sum(b.quantity for b in batches)
+    total_sold = sum(b.sold_quantity for b in batches)
+    cogs_sold = sum(b.cost_per_item * b.sold_quantity for b in batches)
+    gross_profit = sum(b.profit for b in batches)
+    batch_revenue = sum(b.revenue_total for b in batches)
+    active = [b for b in batches if b.status == "ACTIVE"]
+    stock_value = sum(b.remaining * b.cost_per_item for b in active)
+    stock_pieces = sum(b.remaining for b in active)
+
+    gross_margin = round(gross_profit / batch_revenue * 100, 1) if batch_revenue else 0.0
+    sell_through = round(total_sold / total_qty * 100, 1) if total_qty else 0.0
+    turnover = round(cogs_sold / stock_value, 1) if stock_value else 0.0
+    gmroi = round(gross_profit / stock_value, 2) if stock_value else 0.0
+    avg_gp = round(gross_profit / total_sold) if total_sold else 0
+    avg_price = round(batch_revenue / total_sold) if total_sold else 0
+    days_inventory = round(365 / turnover) if turnover else 0
+
+    # Pesanan toko → AOV
+    order_count = Order.query.filter(Order.status.in_(list(ORDER_COUNTED))).count()
+    store_revenue = db.session.query(func.coalesce(func.sum(Order.total), 0)).filter(
+        Order.status.in_(list(ORDER_COUNTED))).scalar() or 0
+    aov = round(store_revenue / order_count) if order_count else 0
+
+    # Margin bersih dari keuangan (usaha, tanpa modal)
+    total_income = db.session.query(func.coalesce(func.sum(Transaction.amount), 0)).filter(
+        Transaction.kind == INCOME, Transaction.category.notin_(CAPITAL_CATEGORIES)).scalar() or 0
+    total_expense = db.session.query(func.coalesce(func.sum(Transaction.amount), 0)).filter(
+        Transaction.kind == EXPENSE).scalar() or 0
+    net = total_income - total_expense
+    net_margin = round(net / total_income * 100, 1) if total_income else 0.0
+
+    # Periode berjalan (dasar alokasi laba)
+    periods = Period.query.order_by(Period.start_date.asc(), Period.id.asc()).all()
+    latest = next((p for p in reversed(periods) if p.is_open), None) or (periods[-1] if periods else None)
+    latest_net = latest.net_profit if latest else 0
+    latest_name = latest.name if latest else ""
+
+    # BEP (titik impas)
+    fixed = setting.fixed_costs_monthly or 0
+    bep_pcs = math.ceil(fixed / avg_gp) if avg_gp > 0 else 0
+    bep_omzet = bep_pcs * avg_price
+    bep_daily = round(bep_pcs / 26, 1) if bep_pcs else 0
+
+    # Cadangan kas ideal (2-3x biaya tetap)
+    reserve_min = fixed * 2
+    reserve_ideal = fixed * 3
+
+    # Dead stock aging (dari bal aktif yang masih ada sisa)
+    today = date.today()
+    aging = [
+        {"label": "0–30 hari", "value": 0, "pcs": 0, "key": "fresh"},
+        {"label": "31–60 hari", "value": 0, "pcs": 0, "key": "ok"},
+        {"label": "61–90 hari", "value": 0, "pcs": 0, "key": "watch"},
+        {"label": "> 90 hari (dead)", "value": 0, "pcs": 0, "key": "dead"},
+    ]
+    for b in active:
+        if b.remaining <= 0:
+            continue
+        age = (today - (b.purchase_date or today)).days
+        val = b.remaining * b.cost_per_item
+        idx = 0 if age <= 30 else 1 if age <= 60 else 2 if age <= 90 else 3
+        aging[idx]["value"] += val
+        aging[idx]["pcs"] += b.remaining
+    dead_value = aging[3]["value"]
+    dead_pct = round(dead_value / stock_value * 100, 1) if stock_value else 0.0
+
+    # KPI cards
+    kpis = [
+        {"label": "Margin Kotor", "val": f"{gross_margin:.0f}%", "raw": gross_margin,
+         "status": _status(gross_margin, 55, 40), "bench": "Sehat > 55%",
+         "hint": "Bagian harga jual yang jadi milikmu sebelum biaya operasional."},
+        {"label": "Margin Bersih", "val": f"{net_margin:.0f}%", "raw": net_margin,
+         "status": _status(net_margin, 10, 0), "bench": "Sehat > 10%",
+         "hint": "Untung sesungguhnya setelah semua biaya. Ini yang bisa direinvestasi."},
+        {"label": "Sell-Through", "val": f"{sell_through:.0f}%", "raw": sell_through,
+         "status": _status(sell_through, 65, 45), "bench": "Sehat > 65%",
+         "hint": "Persen stok yang laku dari yang masuk. Ukur 'barangnya kejual gak'."},
+        {"label": "GMROI", "val": f"{gmroi:.2f}", "raw": gmroi,
+         "status": _status(gmroi, 1.5, 1.0), "bench": "Sehat > 1,5",
+         "hint": "Laba kotor per Rp1 modal di stok. Metrik raja ritel."},
+        {"label": "Perputaran Stok", "val": f"{turnover:.1f}×", "raw": turnover,
+         "status": _status(turnover, 4, 3), "bench": "Sehat 4–8× / th",
+         "hint": f"Stok berputar jadi uang {turnover:.1f}× setahun (± {days_inventory} hari/barang)."},
+        {"label": "Dead Stock", "val": f"{dead_pct:.0f}%", "raw": dead_pct,
+         "status": _status(dead_pct, 10, 25, higher_better=False), "bench": "Aman < 10%",
+         "hint": "Nilai stok yang menganggur > 90 hari. Kas yang tidur."},
+    ]
+
+    return {
+        "setting": setting,
+        "kpis": kpis,
+        "has_batch_data": bool(batches),
+        "total_qty": total_qty, "total_sold": total_sold,
+        "gross_profit": gross_profit, "cogs_sold": cogs_sold,
+        "stock_value": stock_value, "stock_pieces": stock_pieces,
+        "avg_gp": avg_gp, "avg_price": avg_price,
+        "aov": aov, "order_count": order_count, "store_revenue": store_revenue,
+        "net": net, "net_margin": net_margin,
+        "latest_net": latest_net, "latest_name": latest_name,
+        "fixed": fixed, "bep_pcs": bep_pcs, "bep_omzet": bep_omzet, "bep_daily": bep_daily,
+        "reserve_min": reserve_min, "reserve_ideal": reserve_ideal,
+        "aging": aging, "dead_value": dead_value, "dead_pct": dead_pct,
+        "alloc": {
+            "restock": setting.alloc_restock or 0,
+            "reserve": setting.alloc_reserve or 0,
+            "marketing": setting.alloc_marketing or 0,
+            "ops": setting.alloc_ops or 0,
+            "draw": setting.alloc_draw or 0,
+        },
+    }
+
+
+@bp.route("/metrik")
+@login_required
+def metrics():
+    data = _compute_ceo_metrics()
+    return render_template("reports/metrics.html", **data)
 
 
 def _csv_response(filename, header, rows):

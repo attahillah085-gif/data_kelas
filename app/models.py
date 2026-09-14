@@ -180,6 +180,16 @@ class Setting(db.Model):
     # Target omzet (pemasukan) per periode
     monthly_target = db.Column(db.Integer, default=0)
 
+    # --- Metrik CEO ---
+    # Biaya tetap per bulan (sewa, listrik, gaji, dll) — dipakai hitung titik impas (BEP)
+    fixed_costs_monthly = db.Column(db.Integer, default=0)
+    # Target alokasi modal (sistem "ember") dalam persen — total idealnya 100
+    alloc_restock = db.Column(db.Integer, default=45)     # restock stok
+    alloc_reserve = db.Column(db.Integer, default=20)     # cadangan kas
+    alloc_marketing = db.Column(db.Integer, default=15)   # marketing
+    alloc_ops = db.Column(db.Integer, default=10)         # operasional/alat
+    alloc_draw = db.Column(db.Integer, default=10)        # bagi hasil / gaji owner
+
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     @staticmethod
