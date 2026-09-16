@@ -1,146 +1,128 @@
 {% extends "base.html" %}
 {% block title %}Kalender Konten — {{ setting.business_name }}{% endblock %}
 {% block page_title %}Kalender Konten{% endblock %}
-{% block page_subtitle %}Jadwalkan live, video, dan flyer bisnismu.{% endblock %}
+{% block page_subtitle %}Klik tanggal untuk jadwalkan konten. Rutinitas harian muncul otomatis tiap hari.{% endblock %}
+
+{% set kcolor = {'LIVE':'red','VIDEO':'purple','FLYER':'amber','POST':'blue','OTHER':'blue'} %}
 
 {% block topbar_actions %}
   {% if current_user.can_manage %}
-  <button class="btn btn-primary btn-sm" data-open-dialog="dlgContent"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> <span class="hide-sm">Jadwalkan</span></button>
+  <button class="btn btn-ghost btn-sm" data-open-dialog="dlgRoutine" title="Rutinitas tiap hari"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> <span class="hide-sm">Rutin Harian</span></button>
+  <button class="btn btn-primary btn-sm" id="btnAddToday"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> <span class="hide-sm">Jadwalkan</span></button>
   {% endif %}
 {% endblock %}
 
-{% macro kind_ico(kind) %}
-  {% if kind=='LIVE' %}<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M5 12a7 7 0 0 1 7-7M19 12a7 7 0 0 1-7 7"/></svg>
-  {% elif kind=='VIDEO' %}<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-  {% elif kind=='FLYER' %}<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
-  {% else %}<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>{% endif %}
-{% endmacro %}
-{% set kcolor = {'LIVE':'red','VIDEO':'purple','FLYER':'amber','POST':'blue','OTHER':'blue'} %}
-
 {% block content %}
+<style>
+  .cal-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .cal-toolbar h2{margin:0;font-size:1.25rem;min-width:170px}
+  .cal-nav{display:inline-flex;gap:6px}
+  .cal-nav a,.cal-today{width:36px;height:36px;border-radius:10px;border:1px solid var(--border-strong);background:var(--surface);
+    color:var(--text);display:grid;place-items:center;text-decoration:none;font-weight:700}
+  .cal-nav a:hover,.cal-today:hover{border-color:var(--primary);color:var(--primary-strong)}
+  .cal-today{width:auto;padding:0 14px;font-size:.85rem}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;margin-left:auto;font-size:.76rem;color:var(--text-muted)}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .legend i{width:9px;height:9px;border-radius:3px;display:inline-block}
+
+  .routbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);
+    border-radius:12px;padding:10px 12px;margin-bottom:14px}
+  .routbar .lbl{font-size:.8rem;font-weight:700;color:var(--text-muted);display:inline-flex;align-items:center;gap:6px}
+  .rout-chip{display:inline-flex;align-items:center;gap:7px;font-size:.8rem;font-weight:600;padding:5px 10px;border-radius:999px;
+    background:var(--primary-soft);color:var(--primary-strong);border:1px dashed var(--primary)}
+  .rout-chip button{background:none;border:none;color:inherit;cursor:pointer;opacity:.6;font-size:.85rem;padding:0}
+  .rout-chip button:hover{opacity:1}
+
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .cal-dow{font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--text-soft);
+    text-align:center;padding:4px 0}
+  .cal-cell{min-height:104px;border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:6px;
+    display:flex;flex-direction:column;gap:4px;cursor:pointer;transition:.12s;overflow:hidden}
+  .cal-cell:hover{border-color:var(--primary);box-shadow:var(--shadow)}
+  .cal-cell.out{background:transparent;border-color:transparent;cursor:default;opacity:.5}
+  .cal-cell.out:hover{border-color:transparent;box-shadow:none}
+  .cal-cell.today{border-color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary)}
+  .cal-num{font-size:.82rem;font-weight:700;color:var(--text-muted);align-self:flex-start}
+  .cal-cell.today .cal-num{background:var(--primary);color:#fff;border-radius:8px;min-width:22px;height:22px;display:grid;place-items:center}
+  .chip-e{font-size:.72rem;font-weight:600;line-height:1.25;padding:3px 7px;border-radius:7px;cursor:pointer;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px}
+  .chip-e .t{overflow:hidden;text-overflow:ellipsis}
+  .chip-e.done{opacity:.5;text-decoration:line-through}
+  .chip-dot{width:7px;height:7px;border-radius:50%;flex:none}
+  .chip-rt{font-size:.68rem;color:var(--primary-strong);opacity:.75;display:flex;align-items:center;gap:4px;padding:1px 4px}
+  .cal-more{font-size:.68rem;color:var(--text-soft);font-weight:600;padding-left:4px}
+  .b-red{--cc:var(--danger)} .b-purple{--cc:#9b6ad0} .b-amber{--cc:var(--warning)} .b-blue{--cc:var(--primary)}
+  .chip-e.b-red{background:var(--danger-soft,#f7e0e2);color:var(--danger)}
+  .chip-e.b-purple{background:rgba(155,106,208,.16);color:#8a5bc0}
+  .chip-e.b-amber{background:var(--warning-soft,#f8ecd2);color:var(--warning)}
+  .chip-e.b-blue{background:var(--primary-soft);color:var(--primary-strong)}
+
+  @media(max-width:640px){
+    .cal{gap:3px}
+    .cal-cell{min-height:72px;padding:4px;border-radius:9px}
+    .chip-e{font-size:.62rem;padding:2px 4px}
+    .chip-rt{display:none}
+    .legend{display:none}
+  }
+</style>
+
 <div class="grid g-4 mb-16">
   <div class="card kpi"><div class="top"><span class="kpi-ico ico-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span><span class="label">Terjadwal 7 Hari</span></div><div class="value">{{ week_count }}</div></div>
 </div>
 
-<!-- Akan datang -->
-{% if upcoming %}
-<div class="section-title"><h2>Akan Datang</h2></div>
-<div class="grid g-3 mb-24">
-  {% for c in upcoming %}
-  <div class="card card-pad">
-    <div class="flex" style="align-items:flex-start;gap:12px">
-      <span class="kpi-ico ico-{{ kcolor[c.kind] }}" style="flex:none">{{ kind_ico(c.kind) }}</span>
-      <div class="grow" style="min-width:0">
-        <div class="fw-800" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.title }}</div>
-        <div class="text-muted" style="font-size:.8rem">{{ c.kind_label }}{{ ' • ' + c.platform if c.platform }}</div>
-      </div>
-    </div>
-    <div class="muted-box mt-16 row-between" style="padding:10px 12px">
-      <div><div class="text-soft" style="font-size:.72rem">Jadwal</div><div class="fw-700" style="font-size:.86rem">{{ c.scheduled_at.strftime('%a, %d %b • %H:%M') }}</div></div>
-      {% if c.assignee %}<div style="text-align:right"><div class="text-soft" style="font-size:.72rem">PIC</div><div class="flex gap-6"><span class="avatar sm">{{ c.assignee.initials }}</span></div></div>{% endif %}
-    </div>
-    {% if current_user.can_manage %}
-    <div class="flex gap-6 mt-16">
-      <form method="post" action="{{ url_for('content.set_status', cid=c.id) }}"><input type="hidden" name="status" value="DONE"><button class="btn btn-success btn-xs" type="submit">✓ Selesai</button></form>
-      <button class="btn btn-ghost btn-xs" data-open-dialog="dlgEditC{{ c.id }}">Edit</button>
-    </div>
-    {% endif %}
+<div class="cal-toolbar">
+  <div class="cal-nav">
+    <a href="{{ url_for('content.index', bulan=prev_bulan) }}" title="Bulan sebelumnya">‹</a>
+    <a href="{{ url_for('content.index', bulan=next_bulan) }}" title="Bulan berikutnya">›</a>
   </div>
+  <h2>{{ month_label }}</h2>
+  <a class="cal-today" href="{{ url_for('content.index', bulan=this_bulan) }}">Hari Ini</a>
+  <div class="legend">
+    <span><i style="background:var(--danger)"></i>Live</span>
+    <span><i style="background:#9b6ad0"></i>Video</span>
+    <span><i style="background:var(--warning)"></i>Flyer</span>
+    <span><i style="background:var(--primary)"></i>Post</span>
+  </div>
+</div>
+
+{% if routines %}
+<div class="routbar">
+  <span class="lbl"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> Rutin tiap hari:</span>
+  {% for r in routines %}
+  <span class="rout-chip">{{ r.title }} <span class="text-soft" style="opacity:.7;font-weight:500">{{ r.scheduled_at.strftime('%H:%M') }}</span>
+    {% if current_user.can_manage %}<button type="button" data-open-dialog="dlgEditC{{ r.id }}" title="Ubah">✎</button>{% endif %}
+  </span>
   {% endfor %}
+  {% if current_user.can_manage %}<button class="btn btn-soft btn-xs" data-open-dialog="dlgRoutine">+ tambah rutin</button>{% endif %}
 </div>
 {% endif %}
 
-<!-- Semua jadwal -->
-<div class="card">
-  <div class="card-head">
-    <h3>Semua Jadwal</h3>
-    <div class="spacer"></div>
-    <form method="get" class="flex gap-6">
-      <select name="kind" onchange="this.form.submit()">
-        <option value="">Semua jenis</option>
-        {% for k in kinds %}<option value="{{ k }}" {{ 'selected' if kind==k }}>{{ kind_labels[k] }}</option>{% endfor %}
-      </select>
-      <select name="status" onchange="this.form.submit()">
-        <option value="">Semua status</option>
-        <option value="PLANNED" {{ 'selected' if status=='PLANNED' }}>Direncanakan</option>
-        <option value="DONE" {{ 'selected' if status=='DONE' }}>Selesai</option>
-        <option value="CANCELED" {{ 'selected' if status=='CANCELED' }}>Batal</option>
-      </select>
-    </form>
-  </div>
-  <div class="table-wrap">
-    <table class="tbl">
-      <thead><tr><th>Judul</th><th>Jenis</th><th>Platform</th><th>Jadwal</th><th>PIC</th><th>Status</th>{% if current_user.can_manage %}<th></th>{% endif %}</tr></thead>
-      <tbody>
-        {% for c in items %}
-        <tr>
-          <td class="fw-700">{{ c.title }}</td>
-          <td><span class="badge b-{{ kcolor[c.kind] }}">{{ c.kind_label }}</span></td>
-          <td class="text-muted">{{ c.platform or '—' }}</td>
-          <td class="text-muted" style="white-space:nowrap">{{ c.scheduled_at.strftime('%d %b %Y • %H:%M') }}</td>
-          <td>{% if c.assignee %}<span class="flex gap-6"><span class="avatar sm">{{ c.assignee.initials }}</span><span class="hide-sm" style="font-size:.82rem">{{ c.assignee.name.split()[0] }}</span></span>{% else %}<span class="text-soft">—</span>{% endif %}</td>
-          <td>
-            {% if c.status=='DONE' %}<span class="badge b-green">Selesai</span>
-            {% elif c.status=='CANCELED' %}<span class="badge b-red">Batal</span>
-            {% else %}<span class="badge b-amber">Direncanakan</span>{% endif %}
-          </td>
-          {% if current_user.can_manage %}
-          <td class="num">
-            <div class="flex gap-6" style="justify-content:flex-end">
-              <form method="post" action="{{ url_for('content.set_status', cid=c.id) }}">
-                <select name="status" onchange="this.form.submit()" style="padding:6px 26px 6px 9px;font-size:.78rem">
-                  <option {{ 'selected' if c.status=='PLANNED' }} value="PLANNED">Rencana</option>
-                  <option {{ 'selected' if c.status=='DONE' }} value="DONE">Selesai</option>
-                  <option {{ 'selected' if c.status=='CANCELED' }} value="CANCELED">Batal</option>
-                </select>
-              </form>
-              <button class="icon-btn btn-sm" style="width:32px;height:32px" data-open-dialog="dlgEditC{{ c.id }}" title="Edit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-              <form method="post" action="{{ url_for('content.delete', cid=c.id) }}" onsubmit="return confirm('Hapus konten ini?')">
-                <button class="icon-btn btn-sm" style="width:32px;height:32px" title="Hapus"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button>
-              </form>
-            </div>
-          </td>
-          {% endif %}
-        </tr>
-
-        {% if current_user.can_manage %}
-        {# dialog edit di luar tabel dirender di bawah #}
-        {% endif %}
-        {% else %}
-        <tr><td colspan="7" class="empty" style="padding:36px">Belum ada konten terjadwal.</td></tr>
+<div class="card card-pad">
+  <div class="cal">
+    {% for d in dow %}<div class="cal-dow">{{ d }}</div>{% endfor %}
+    {% for week in weeks %}{% for cell in week %}
+    <div class="cal-cell {{ 'out' if not cell.in_month }} {{ 'today' if cell.is_today }}" {% if cell.in_month and current_user.can_manage %}data-date="{{ cell.iso }}"{% endif %}>
+      <span class="cal-num">{{ cell.day }}</span>
+      {% if cell.in_month %}
+        {% for r in routines %}<span class="chip-rt">🔁 {{ r.title }}</span>{% endfor %}
+        {% for it in cell.entries[:3] %}
+        <span class="chip-e b-{{ kcolor[it.kind] }} {{ 'done' if it.status=='DONE' }}" data-open-dialog="dlgEditC{{ it.id }}" title="{{ it.title }} • {{ it.scheduled_at.strftime('%H:%M') }}">
+          <span class="chip-dot" style="background:currentColor"></span><span class="t">{{ it.scheduled_at.strftime('%H:%M') }} {{ it.title }}</span>
+        </span>
         {% endfor %}
-      </tbody>
-    </table>
+        {% if cell.entries|length > 3 %}<span class="cal-more">+{{ cell.entries|length - 3 }} lagi</span>{% endif %}
+      {% endif %}
+    </div>
+    {% endfor %}{% endfor %}
   </div>
 </div>
 
-<!-- Dialog edit (dirender terpisah agar valid) -->
 {% if current_user.can_manage %}
-{% for c in items %}
-<dialog id="dlgEditC{{ c.id }}">
-  <form method="post" action="{{ url_for('content.edit', cid=c.id) }}">
-    <div class="dialog-head"><h3>Edit Konten</h3><button type="button" class="icon-btn close-x" data-close-dialog="dlgEditC{{ c.id }}">✕</button></div>
-    <div class="dialog-body">
-      <div class="field"><label>Judul</label><input name="title" value="{{ c.title }}" required></div>
-      <div class="form-row">
-        <div class="field"><label>Jenis</label><select name="kind">{% for k in kinds %}<option value="{{ k }}" {{ 'selected' if c.kind==k }}>{{ kind_labels[k] }}</option>{% endfor %}</select></div>
-        <div class="field"><label>Platform</label><select name="platform"><option value="">—</option>{% for p in platforms %}<option {{ 'selected' if c.platform==p }}>{{ p }}</option>{% endfor %}</select></div>
-      </div>
-      <div class="form-row">
-        <div class="field"><label>Tanggal & jam</label><input type="datetime-local" name="scheduled_at" value="{{ c.scheduled_at.strftime('%Y-%m-%dT%H:%M') }}"></div>
-        <div class="field"><label>Penanggung jawab</label><select name="assignee_id"><option value="">—</option>{% for u in assignees %}<option value="{{ u.id }}" {{ 'selected' if c.assignee_id==u.id }}>{{ u.name }}</option>{% endfor %}</select></div>
-      </div>
-      <div class="field"><label>Catatan</label><textarea name="note">{{ c.note }}</textarea></div>
-    </div>
-    <div class="dialog-foot"><button type="button" class="btn btn-ghost" data-close-dialog="dlgEditC{{ c.id }}">Batal</button><button class="btn btn-primary" type="submit">Simpan</button></div>
-  </form>
-</dialog>
-{% endfor %}
-
-<!-- Dialog tambah -->
+<!-- Dialog: tambah konten satu tanggal -->
 <dialog id="dlgContent">
   <form method="post" action="{{ url_for('content.add') }}">
-    <div class="dialog-head"><h3>Jadwalkan Konten</h3><button type="button" class="icon-btn close-x" data-close-dialog="dlgContent">✕</button></div>
+    <input type="hidden" name="repeat" value="NONE">
+    <div class="dialog-head"><h3>Jadwalkan Konten <span id="cDateLabel" class="text-soft" style="font-weight:600;font-size:.85rem"></span></h3><button type="button" class="icon-btn close-x" data-close-dialog="dlgContent">✕</button></div>
     <div class="dialog-body">
       <div class="field"><label>Judul</label><input name="title" placeholder="mis. Live Thrift Jumat Malam" required></div>
       <div class="form-row">
@@ -148,13 +130,87 @@
         <div class="field"><label>Platform</label><select name="platform"><option value="">—</option>{% for p in platforms %}<option>{{ p }}</option>{% endfor %}</select></div>
       </div>
       <div class="form-row">
-        <div class="field"><label>Tanggal & jam</label><input type="datetime-local" name="scheduled_at" value="{{ now_local }}" required></div>
-        <div class="field"><label>Penanggung jawab</label><select name="assignee_id"><option value="">—</option>{% for u in assignees %}<option value="{{ u.id }}">{{ u.name }}</option>{% endfor %}</select></div>
+        <div class="field"><label>Tanggal</label><input type="date" name="date" id="cDate" required></div>
+        <div class="field"><label>Jam</label><input type="time" name="time" value="19:00" required></div>
       </div>
+      <div class="field"><label>Penanggung jawab <span class="text-soft">(opsional)</span></label><select name="assignee_id"><option value="">—</option>{% for u in assignees %}<option value="{{ u.id }}">{{ u.name }}</option>{% endfor %}</select></div>
       <div class="field"><label>Catatan <span class="text-soft">(opsional)</span></label><textarea name="note" placeholder="Rincian, produk yang dijual, dll."></textarea></div>
     </div>
     <div class="dialog-foot"><button type="button" class="btn btn-ghost" data-close-dialog="dlgContent">Batal</button><button class="btn btn-primary" type="submit">Simpan Jadwal</button></div>
   </form>
 </dialog>
+
+<!-- Dialog: rutin harian (auto tiap hari) -->
+<dialog id="dlgRoutine">
+  <form method="post" action="{{ url_for('content.add') }}">
+    <input type="hidden" name="repeat" value="DAILY">
+    <div class="dialog-head"><h3>🔁 Rutinitas Harian</h3><button type="button" class="icon-btn close-x" data-close-dialog="dlgRoutine">✕</button></div>
+    <div class="dialog-body">
+      <p class="text-soft" style="margin-top:0;font-size:.84rem">Tugas yang harus dilakukan <strong>setiap hari</strong> (mis. upload video, bales chat customer). Otomatis muncul di semua tanggal.</p>
+      <div class="field"><label>Judul rutinitas</label><input name="title" placeholder="mis. Upload 1 video TikTok" required></div>
+      <div class="form-row">
+        <div class="field"><label>Jenis</label><select name="kind">{% for k in kinds %}<option value="{{ k }}">{{ kind_labels[k] }}</option>{% endfor %}</select></div>
+        <div class="field"><label>Jam (pengingat)</label><input type="time" name="time" value="09:00" required></div>
+      </div>
+      <div class="field"><label>Catatan <span class="text-soft">(opsional)</span></label><textarea name="note" placeholder="mis. tema konten, dll."></textarea></div>
+    </div>
+    <div class="dialog-foot"><button type="button" class="btn btn-ghost" data-close-dialog="dlgRoutine">Batal</button><button class="btn btn-primary" type="submit">Simpan Rutin</button></div>
+  </form>
+</dialog>
+
+<!-- Dialog edit per item -->
+{% for c in edit_items %}
+<dialog id="dlgEditC{{ c.id }}">
+  <div class="dialog-head"><h3>{{ '🔁 Edit Rutinitas' if c.repeat=='DAILY' else 'Edit Konten' }}</h3><button type="button" class="icon-btn close-x" data-close-dialog="dlgEditC{{ c.id }}">✕</button></div>
+  <form method="post" action="{{ url_for('content.edit', cid=c.id) }}" id="editForm{{ c.id }}">
+    <div class="dialog-body">
+      <div class="field"><label>Judul</label><input name="title" value="{{ c.title }}" required></div>
+      <div class="form-row">
+        <div class="field"><label>Jenis</label><select name="kind">{% for k in kinds %}<option value="{{ k }}" {{ 'selected' if c.kind==k }}>{{ kind_labels[k] }}</option>{% endfor %}</select></div>
+        <div class="field"><label>Platform</label><select name="platform"><option value="">—</option>{% for p in platforms %}<option {{ 'selected' if c.platform==p }}>{{ p }}</option>{% endfor %}</select></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>{{ 'Jam' if c.repeat=='DAILY' else 'Tanggal & jam' }}</label><input type="datetime-local" name="scheduled_at" value="{{ c.scheduled_at.strftime('%Y-%m-%dT%H:%M') }}"></div>
+        <div class="field"><label>Penanggung jawab</label><select name="assignee_id"><option value="">—</option>{% for u in assignees %}<option value="{{ u.id }}" {{ 'selected' if c.assignee_id==u.id }}>{{ u.name }}</option>{% endfor %}</select></div>
+      </div>
+      <div class="field"><label>Catatan</label><textarea name="note">{{ c.note }}</textarea></div>
+    </div>
+  </form>
+  <div class="dialog-foot" style="justify-content:space-between;gap:8px;flex-wrap:wrap">
+    <div class="flex gap-6">
+      {% if c.repeat != 'DAILY' %}
+      <form method="post" action="{{ url_for('content.set_status', cid=c.id) }}"><input type="hidden" name="status" value="DONE"><button class="btn btn-success btn-sm" type="submit">✓ Selesai</button></form>
+      {% endif %}
+      <form method="post" action="{{ url_for('content.delete', cid=c.id) }}" onsubmit="return confirm('Hapus ini?')"><button class="btn btn-danger-soft btn-sm" type="submit">Hapus</button></form>
+    </div>
+    <button class="btn btn-primary" type="submit" form="editForm{{ c.id }}">Simpan</button>
+  </div>
+</dialog>
+{% endfor %}
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  var todayIso = "{{ today_iso }}";
+  function openAdd(dateIso){
+    var d = document.getElementById("cDate");
+    if(d) d.value = dateIso || todayIso;
+    var lbl = document.getElementById("cDateLabel");
+    if(lbl){
+      try{ lbl.textContent = "• " + new Date((dateIso||todayIso)+"T00:00").toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long"}); }catch(e){ lbl.textContent=""; }
+    }
+    if(window.openDialog) window.openDialog("dlgContent");
+  }
+  var bt = document.getElementById("btnAddToday");
+  if(bt) bt.addEventListener("click", function(){ openAdd(todayIso); });
+  document.querySelectorAll(".cal-cell[data-date]").forEach(function(cell){
+    cell.addEventListener("click", function(e){
+      if(e.target.closest("[data-open-dialog]")) return; // klik chip → biar dialog edit yang jalan
+      openAdd(cell.getAttribute("data-date"));
+    });
+  });
+})();
+</script>
 {% endblock %}

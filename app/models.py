@@ -335,6 +335,7 @@ class ContentSchedule(db.Model):
     platform = db.Column(db.String(60), default="")
     scheduled_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, index=True)
     status = db.Column(db.String(12), default=CONTENT_PLANNED)
+    repeat = db.Column(db.String(10), default="NONE", index=True)  # NONE / DAILY (rutin tiap hari)
     note = db.Column(db.Text, default="")
     assignee_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
     created_by_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
