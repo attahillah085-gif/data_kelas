@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Catatan & Target — {{ setting.business_name }}{% endblock %}
+{% block page_title %}Catatan & Target{% endblock %}
+{% block page_subtitle %}Rencanakan harianmu, catat idenya, centang yang beres.{% endblock %}
+
+{% set dtot = daily|length %}
+{% set ddone = daily|selectattr('done')|list|length %}
+{% set mtot = monthly|length %}
+{% set mdone = monthly|selectattr('done')|list|length %}
+
+{% block content %}
+<style>
+  .tgt-list{display:flex;flex-direction:column;gap:8px}
+  .tgt-row{display:flex;align-items:center;gap:11px;padding:10px 12px;border:1px solid var(--border);
+    border-radius:12px;background:var(--surface)}
+  .tgt-row.done{background:var(--surface-2);border-color:transparent}
+  .tgt-row.done .tgt-title{text-decoration:line-through;color:var(--text-soft)}
+  .tgt-check{flex:none;width:26px;height:26px;border-radius:8px;border:2px solid var(--border-strong);
+    background:var(--surface);cursor:pointer;display:grid;place-items:center;color:#fff;font-size:.9rem;padding:0}
+  .tgt-row.done .tgt-check{background:var(--success);border-color:var(--success)}
+  .tgt-title{flex:1;min-width:0;font-weight:600;font-size:.94rem;word-break:break-word}
+  .tgt-del{flex:none;background:none;border:none;color:var(--text-soft);cursor:pointer;padding:4px;font-size:.9rem}
+  .tgt-del:hover{color:var(--danger)}
+  .tgt-add{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .tgt-add input[type=text]{flex:1;min-width:150px}
+  .tgt-add select{flex:0 0 130px}
+  .note-item{border:1px solid var(--border);border-radius:12px;padding:12px 13px;background:var(--surface);
+    display:flex;flex-direction:column;gap:6px}
+  .note-item.pin{border-left:3px solid var(--warning)}
+  .note-body{white-space:pre-wrap;word-break:break-word;font-size:.92rem;line-height:1.55}
+  .note-foot{display:flex;align-items:center;gap:8px;font-size:.74rem;color:var(--text-soft)}
+  .note-foot .spacer{flex:1}
+  .mini{background:none;border:none;cursor:pointer;color:var(--text-soft);padding:3px 5px;font-size:.78rem;font-weight:600}
+  .mini:hover{color:var(--primary-strong)}
+  .mini.del:hover{color:var(--danger)}
+</style>
+
+<div class="grid cols-main">
+  <div class="stack">
+    <!-- TARGET HARIAN -->
+    <div class="card">
+      <div class="card-head">
+        <h3>🎯 Target Hari Ini</h3>
+        <div class="spacer"></div>
+        <span class="badge {{ 'b-green' if dtot and ddone==dtot else 'b-amber' if dtot else 'b-muted' }}">{{ ddone }}/{{ dtot }} selesai</span>
+      </div>
+      <div class="card-body">
+        {% if dtot %}
+        <div class="progress mb-16" style="height:10px"><span style="width:{{ (ddone/dtot*100)|round|int }}%"></span></div>
+        {% endif %}
+        <div class="tgt-list">
+          {% for t in daily %}
+          <div class="tgt-row {{ 'done' if t.done }}">
+            <form method="post" action="{{ url_for('planner.target_toggle', tid=t.id) }}"><button class="tgt-check" type="submit" title="Tandai selesai">{{ '✓' if t.done }}</button></form>
+            <span class="tgt-title">{{ t.title }}</span>
+            <span class="badge b-muted" style="font-size:.66rem">{{ t.category }}</span>
+            <form method="post" action="{{ url_for('planner.target_delete', tid=t.id) }}" onsubmit="return confirm('Hapus target ini?')"><button class="tgt-del" type="submit" title="Hapus">✕</button></form>
+          </div>
+          {% else %}
+          <p class="text-muted" style="margin:0;font-size:.88rem">Belum ada target hari ini. Tambahkan di bawah 👇</p>
+          {% endfor %}
+        </div>
+        <form method="post" action="{{ url_for('planner.target_add') }}" class="tgt-add">
+          <input type="hidden" name="period" value="DAILY">
+          <input type="text" name="title" placeholder="mis. Posting 3 konten IG" required>
+          <select name="category">{% for c in categories %}<option>{{ c }}</option>{% endfor %}</select>
+          <button class="btn btn-primary btn-sm" type="submit">+ Tambah</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- TARGET BULANAN -->
+    <div class="card">
+      <div class="card-head">
+        <h3>📅 Target Bulan Ini</h3>
+        <div class="spacer"></div>
+        <span class="badge {{ 'b-green' if mtot and mdone==mtot else 'b-amber' if mtot else 'b-muted' }}">{{ mdone }}/{{ mtot }} selesai</span>
+      </div>
+      <div class="card-body">
+        {% if mtot %}
+        <div class="progress mb-16" style="height:10px"><span style="width:{{ (mdone/mtot*100)|round|int }}%"></span></div>
+        {% endif %}
+        <div class="tgt-list">
+          {% for t in monthly %}
+          <div class="tgt-row {{ 'done' if t.done }}">
+            <form method="post" action="{{ url_for('planner.target_toggle', tid=t.id) }}"><button class="tgt-check" type="submit" title="Tandai selesai">{{ '✓' if t.done }}</button></form>
+            <span class="tgt-title">{{ t.title }}</span>
+            <span class="badge b-muted" style="font-size:.66rem">{{ t.category }}</span>
+            <form method="post" action="{{ url_for('planner.target_delete', tid=t.id) }}" onsubmit="return confirm('Hapus target ini?')"><button class="tgt-del" type="submit" title="Hapus">✕</button></form>
+          </div>
+          {% else %}
+          <p class="text-muted" style="margin:0;font-size:.88rem">Belum ada target bulan ini. mis. "Omzet 5 juta", "Tambah 50 follower".</p>
+          {% endfor %}
+        </div>
+        <form method="post" action="{{ url_for('planner.target_add') }}" class="tgt-add">
+          <input type="hidden" name="period" value="MONTHLY">
+          <input type="text" name="title" placeholder="mis. Capai omzet Rp5 juta" required>
+          <select name="category">{% for c in categories %}<option>{{ c }}</option>{% endfor %}</select>
+          <button class="btn btn-primary btn-sm" type="submit">+ Tambah</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATATAN -->
+  <div class="card">
+    <div class="card-head"><h3>📝 Catatan</h3><div class="spacer"></div><span class="text-soft" style="font-size:.8rem">ide, reminder, marketing</span></div>
+    <div class="card-body">
+      <form method="post" action="{{ url_for('planner.note_add') }}" class="mb-16">
+        <div class="field" style="margin-bottom:8px"><textarea name="body" placeholder="Tulis catatan / ide di sini…" required style="min-height:70px"></textarea></div>
+        <div class="flex gap-8" style="flex-wrap:wrap;align-items:center">
+          <select name="category" style="flex:0 0 140px">{% for c in categories %}<option>{{ c }}</option>{% endfor %}</select>
+          <label class="check" style="font-size:.82rem"><input type="checkbox" name="pinned" value="1"> Sematkan</label>
+          <div class="spacer" style="flex:1"></div>
+          <button class="btn btn-primary btn-sm" type="submit">Simpan</button>
+        </div>
+      </form>
+      <div class="stack" style="gap:10px">
+        {% for n in notes %}
+        <div class="note-item {{ 'pin' if n.pinned }}">
+          <div class="note-body">{{ n.body }}</div>
+          <div class="note-foot">
+            <span class="badge b-muted" style="font-size:.64rem">{{ n.category }}</span>
+            {% if n.pinned %}<span title="Disematkan">📌</span>{% endif %}
+            <span>{{ n.created_at.strftime('%d %b') }}</span>
+            <div class="spacer"></div>
+            <form method="post" action="{{ url_for('planner.note_pin', nid=n.id) }}"><button class="mini" type="submit">{{ 'Lepas' if n.pinned else 'Sematkan' }}</button></form>
+            <form method="post" action="{{ url_for('planner.note_delete', nid=n.id) }}" onsubmit="return confirm('Hapus catatan ini?')"><button class="mini del" type="submit">Hapus</button></form>
+          </div>
+        </div>
+        {% else %}
+        <p class="text-muted" style="margin:0;font-size:.88rem">Belum ada catatan.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

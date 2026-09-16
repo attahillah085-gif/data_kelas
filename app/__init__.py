@@ -124,6 +124,7 @@ def create_app(config_object: type = Config) -> Flask:
     from .store import bp as store_bp
     from .catalog import bp as catalog_bp
     from .reports import bp as reports_bp
+    from .planner import bp as planner_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
@@ -135,6 +136,7 @@ def create_app(config_object: type = Config) -> Flask:
     app.register_blueprint(store_bp)
     app.register_blueprint(catalog_bp)
     app.register_blueprint(reports_bp)
+    app.register_blueprint(planner_bp)
 
     with app.app_context():
         db.create_all()

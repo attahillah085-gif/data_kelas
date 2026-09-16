@@ -73,6 +73,12 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
       Metrik CEO
     </a>
+    {% if current_user.is_authenticated and current_user.can_manage %}
+    <a class="nav-item {{ 'active' if bp=='planner' }}" href="{{ url_for('planner.index') }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>
+      Catatan &amp; Target
+    </a>
+    {% endif %}
 
     {% if current_user.is_authenticated and current_user.can_manage %}
     <div class="nav-section">Toko Online</div>

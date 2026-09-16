@@ -1,7 +1,7 @@
 """Dashboard, pengaturan, dan manajemen pengguna."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
@@ -114,6 +114,14 @@ def dashboard():
     )
     recent_orders = Order.query.order_by(Order.created_at.desc()).limit(5).all()
 
+    # Target harian (widget dashboard) — khusus pengelola
+    today_targets = []
+    if current_user.can_manage:
+        from .models import Target
+        today_targets = (Target.query.filter_by(period="DAILY", target_date=date.today())
+                         .order_by(Target.done.asc(), Target.created_at.asc()).all())
+    today_done = sum(1 for t in today_targets if t.done)
+
     # Bagian khusus investor
     my_investment = my_percent = my_payout = 0
     if current_user.is_investor:
@@ -150,6 +158,8 @@ def dashboard():
         active_products=active_products,
         low_stock=low_stock,
         recent_orders=recent_orders,
+        today_targets=today_targets,
+        today_done=today_done,
     )
 
 

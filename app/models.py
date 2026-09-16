@@ -410,6 +410,48 @@ ORDER_STATUS_LABELS = {
 ORDER_COUNTED = {ORDER_PAID, ORDER_SHIPPED, ORDER_DONE}
 
 
+# ==========================================================================
+#  Catatan & Target (perencanaan harian/bulanan)
+# ==========================================================================
+TARGET_CATEGORIES = ["Umum", "Marketing", "Penjualan", "Konten", "Stok", "Operasional"]
+TARGET_DAILY = "DAILY"
+TARGET_MONTHLY = "MONTHLY"
+
+
+class Target(db.Model):
+    """Target kerja harian/bulanan dengan status dikerjakan atau belum."""
+
+    __tablename__ = "targets"
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(240), nullable=False)
+    period = db.Column(db.String(10), default=TARGET_DAILY, index=True)  # DAILY / MONTHLY
+    # DAILY: tanggal hari itu; MONTHLY: tanggal 1 bulan yang bersangkutan
+    target_date = db.Column(db.Date, default=date.today, index=True)
+    category = db.Column(db.String(40), default="Umum")
+    done = db.Column(db.Boolean, default=False, index=True)
+    done_at = db.Column(db.DateTime, nullable=True)
+    created_by_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    created_by = db.relationship("User", foreign_keys=[created_by_id])
+
+
+class Note(db.Model):
+    """Catatan bebas (mis. ide marketing, reminder)."""
+
+    __tablename__ = "notes"
+
+    id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.Text, nullable=False)
+    category = db.Column(db.String(40), default="Umum")
+    pinned = db.Column(db.Boolean, default=False, index=True)
+    created_by_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    created_by = db.relationship("User", foreign_keys=[created_by_id])
+
+
 class Product(db.Model):
     __tablename__ = "products"
 

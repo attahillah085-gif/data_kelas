@@ -16,6 +16,37 @@
 {% endblock %}
 
 {% block content %}
+{% if current_user.can_manage %}
+<style>
+  .dash-check{flex:none;width:24px;height:24px;border-radius:7px;border:2px solid var(--border-strong);
+    background:var(--surface);cursor:pointer;display:grid;place-items:center;color:#fff;font-size:.82rem;padding:0}
+  .dash-check.on{background:var(--success);border-color:var(--success)}
+  .dtgt{display:flex;align-items:center;gap:9px;padding:3px 0}
+  .dtgt .t{font-size:.92rem;font-weight:600;flex:1;min-width:0;word-break:break-word}
+  .dtgt.done .t{text-decoration:line-through;color:var(--text-soft)}
+</style>
+<div class="card card-pad mb-16">
+  <div class="row-between mb-8">
+    <strong>🎯 Target Hari Ini</strong>
+    <a class="text-muted" style="font-size:.82rem" href="{{ url_for('planner.index') }}">Kelola →</a>
+  </div>
+  {% if today_targets %}
+  <div class="progress mb-8" style="height:8px"><span style="width:{{ (today_done/(today_targets|length)*100)|round|int }}%"></span></div>
+  <div class="stack" style="gap:2px">
+    {% for t in today_targets %}
+    <div class="dtgt {{ 'done' if t.done }}">
+      <form method="post" action="{{ url_for('planner.target_toggle', tid=t.id) }}"><button class="dash-check {{ 'on' if t.done }}" type="submit" title="Tandai selesai">{{ '✓' if t.done }}</button></form>
+      <span class="t">{{ t.title }}</span>
+      <span class="badge b-muted" style="font-size:.62rem">{{ t.category }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="text-soft mt-8" style="font-size:.8rem">{{ today_done }}/{{ today_targets|length }} beres hari ini</div>
+  {% else %}
+  <p class="text-muted" style="margin:0;font-size:.88rem">Belum ada target hari ini. <a href="{{ url_for('planner.index') }}">Tambah target →</a></p>
+  {% endif %}
+</div>
+{% endif %}
 {% if not periods %}
   <div class="card card-pad empty">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
